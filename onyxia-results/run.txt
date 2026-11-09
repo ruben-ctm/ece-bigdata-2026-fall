@@ -344,3 +344,54 @@ version-hint: 1
 |   silver|   orders|      false|
 +---------+---------+-----------+
 
+[push] ok
+[push] ok
+[push] ok
+=== [12:27:49] 05 deploiement trino
+=== [12:27:49] 05 deploiement trino
+=== [12:27:49] 05 deploiement trino
+secret/trino-polaris-oauth created
+secret/trino-polaris-oauth created
+secret/trino-polaris-oauth created
+configmap/trino-polaris-config created
+configmap/trino-polaris-config created
+configmap/trino-polaris-config created
+"trino" has been added to your repositories
+"trino" has been added to your repositories
+"trino" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "trino" chart repository
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Saving 1 charts
+Downloading trino from repo https://trinodb.github.io/charts
+Saving 1 charts
+Downloading trino from repo https://trinodb.github.io/charts
+Saving 1 charts
+Downloading trino from repo https://trinodb.github.io/charts
+Deleting outdated charts
+Deleting outdated charts
+Deleting outdated charts
+Release "trino" does not exist. Installing it now.
+Release "trino" does not exist. Installing it now.
+Release "trino" does not exist. Installing it now.
