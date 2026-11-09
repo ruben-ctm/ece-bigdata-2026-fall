@@ -7,9 +7,11 @@ BRANCH="${TP_BRANCH:-claude/epic-wright-po7bx7}"
 HOME="${HOME:-/home/onyxia}"
 W="$HOME/work/tp-adaltas"; SRC="$W/src"; RES="$W/results"
 mkdir -p "$W" "$RES"
-exec > >(tee -a "$RES/run.log") 2>&1
+exec > >(tee -a "$RES/run.txt") 2>&1
 LOCAL_TEST="${LOCAL_TEST:-0}"      # 1 = test hors cluster (pas de kubectl/helm)
 STATUS="$RES/steps.tsv"; : > "$STATUS"
+START="${TP_START:-00}"
+RAW="https://raw.githubusercontent.com/$REPO/$BRANCH/onyxia"
 
 now() { date '+%H:%M:%S'; }
 push_results() {
@@ -21,21 +23,38 @@ push_results() {
     git config user.name "${GIT_USER_NAME:-tp-bot}"; git config user.email "${GIT_USER_MAIL:-tp-bot@users.noreply.github.com}"
     git checkout -q -B onyxia-results
     rm -rf onyxia-results && mkdir -p onyxia-results && cp -r "$RES"/. onyxia-results/
-    git add onyxia-results && git commit -q -m "onyxia results $(date -u +%FT%TZ)" || true
+    git add -f onyxia-results && git commit -q -m "onyxia results $(date -u +%FT%TZ)" || true
     git push -q -f origin onyxia-results
-  ) >>"$RES/push.log" 2>&1 && echo "[push] ok" || echo "[push] ECHEC (voir push.log)"
+  ) >>"$RES/push.txt" 2>&1 && echo "[push] ok" || echo "[push] ECHEC (voir push.txt)"
 }
 step() { # step NOM commande...
   local name="$1"; shift
+  if [[ "${name%% *}" < "$START" ]]; then echo "--- $name ignoree (reprise a $START)"; return 0; fi
   echo "=== [$(now)] $name"
-  if "$@"; then echo -e "$name\tOK" >>"$STATUS"; else echo -e "$name\tECHEC" >>"$STATUS"; echo "!!! $name a echoue"; diag; push_results; return 1; fi
+  if "$@"; then echo -e "$name\tOK" >>"$STATUS"; else echo -e "$name\tECHEC" >>"$STATUS"; echo "!!! $name a echoue"; tail -n 120 "$RES/run.txt" > "$RES/fail_${name%% *}.txt"; diag; push_results; return 1; fi
   push_results
 }
 diag() {
   [ "$LOCAL_TEST" = 1 ] && return 0
-  { echo "--- diag $(now)"; kubectl get pods -o wide 2>&1 | tail -20; kubectl get events --sort-by=.lastTimestamp 2>&1 | tail -15; } >>"$RES/diag.log" 2>&1
+  { echo "--- diag $(now)"; kubectl get pods -o wide 2>&1 | tail -20; kubectl get events --sort-by=.lastTimestamp 2>&1 | tail -15; } >>"$RES/diag.txt" 2>&1
 }
 trap 'push_results' EXIT
+
+cur_control() { curl -fsS -m 20 "$RAW/control.txt?$(date +%s)" 2>/dev/null | head -1; }
+: "${TP_RERUN_ID:=$(cur_control | cut -d' ' -f1)}"
+wait_for_rerun() {
+  [ "$LOCAL_TEST" = 1 ] && return 0
+  echo "=== [$(now)] en attente de consignes ($RAW/control.txt)"
+  while true; do
+    sleep 60
+    c="$(cur_control)"; id="${c%% *}"; stepn="${c#* }"; [ "$stepn" = "$c" ] && stepn="00"
+    if [ -n "$id" ] && [ "$id" != "${TP_RERUN_ID:-}" ]; then
+      curl -fsSL "$RAW/run.sh?$(date +%s)" -o "$W/run.sh.new" && mv "$W/run.sh.new" "$W/run.sh"
+      TP_RERUN_ID="$id" TP_START="$stepn" exec bash "$W/run.sh"
+    fi
+  done
+}
+main() {
 
 # --- sources
 get_sources() {
@@ -43,7 +62,9 @@ get_sources() {
   if [ -n "${TP_SRC_LOCAL:-}" ]; then cp -r "$TP_SRC_LOCAL" "$SRC"; return; fi
   rm -rf "$W/repo"; git clone -q --depth 1 -b "$BRANCH" "https://github.com/$REPO.git" "$W/repo" && cp -r "$W/repo/onyxia" "$SRC"
 }
-step "00 sources" get_sources || exit 1
+echo "=== [$(now)] 00 sources"
+get_sources || { echo "!!! 00 sources a echoue"; echo -e "00 sources\tECHEC" >>"$STATUS"; push_results; return 1; }
+echo -e "00 sources\tOK" >>"$STATUS"
 
 # --- environnement
 export LAB_BUCKET_NAME="${LAB_BUCKET_NAME:-${KUBERNETES_NAMESPACE:?KUBERNETES_NAMESPACE manquant}}"
@@ -71,11 +92,22 @@ gen_bronze() {
   $AWS_CMD s3 cp "$W/orders.csv" "s3://$LAB_BUCKET_NAME/bronze/orders.csv" &&
   $AWS_CMD s3 ls "s3://$LAB_BUCKET_NAME/bronze/"
 }
-step "01 donnees bronze" gen_bronze || exit 1
+step "01 donnees bronze" gen_bronze || return 1
 
 # --- lab 07 : silver Spark
-silver() { cd "$SRC" && "$PY" silver_spark.py; }
-step "02 silver spark" silver || exit 1
+detect_spark() {
+  v=$("$PY" -c 'import pyspark;print(".".join(pyspark.__version__.split(".")[:2]))' 2>/dev/null || true)
+  [ -n "$v" ] || v=$("${SPARK_HOME:-/opt/spark}/bin/spark-submit" --version 2>&1 | grep -o 'version [0-9]*\.[0-9]*' | head -1 | cut -d' ' -f2)
+  [ -n "$v" ] && export ICEBERG_PACKAGE="${ICEBERG_PACKAGE:-org.apache.iceberg:iceberg-spark-runtime-${v}_2.13:1.11.0}"
+  echo "spark=${v:-inconnu} iceberg=${ICEBERG_PACKAGE:-defaut}"
+}
+detect_spark
+spark_run() {
+  if "$PY" -c 'import pyspark' 2>/dev/null; then "$PY" "$@"
+  else "${SPARK_HOME:-/opt/spark}/bin/spark-submit" --master 'local[*]' --packages "${ICEBERG_PACKAGE:-org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0}" "$@"; fi
+}
+silver() { cd "$SRC" && { echo "python=$(command -v $PY) spark_home=${SPARK_HOME:-?}"; $PY -c 'import pyspark;print("pyspark",pyspark.__version__)' 2>&1 | tail -1; java -version 2>&1 | head -1; } && spark_run silver_spark.py; }
+step "02 silver spark" silver || return 1
 
 # --- lab 09 : Polaris
 deploy_polaris() (
@@ -110,15 +142,15 @@ reset_polaris_credentials() { # si les identifiants ont ete perdus (bootstrap de
   done
 }
 if [ "$LOCAL_TEST" != 1 ]; then
-  step "03 deploiement polaris" deploy_polaris || exit 1
+  step "03 deploiement polaris" deploy_polaris || return 1
   get_polaris_credentials || reset_polaris_credentials
-  [ -s "$HOME/.polaris-credentials.env" ] || { echo "identifiants Polaris introuvables"; exit 1; }
+  [ -s "$HOME/.polaris-credentials.env" ] || { echo "identifiants Polaris introuvables"; return 1; }
   set -a; . "$HOME/.polaris-credentials.env"; set +a
 else
   export POLARIS_DEV_CREDENTIAL="${POLARIS_DEV_CREDENTIAL:-root:s3cr3t}"
 fi
-register() { cd "$SRC" && "$PY" register_polaris.py; }
-step "04 silver dans polaris" register || exit 1
+register() { cd "$SRC" && spark_run register_polaris.py; }
+step "04 silver dans polaris" register || return 1
 
 # --- lab 10 : Trino
 deploy_trino() (
@@ -131,7 +163,7 @@ deploy_trino() (
   helm upgrade --install trino ./trino/deployment --wait --timeout 15m
   curl -sf http://trino:8080/v1/info
 )
-if [ "$LOCAL_TEST" != 1 ]; then step "05 deploiement trino" deploy_trino || exit 1; fi
+if [ "$LOCAL_TEST" != 1 ]; then step "05 deploiement trino" deploy_trino || return 1; fi
 
 # --- labs Trino 2 et 3
 run_labs() (
@@ -144,3 +176,6 @@ run_labs() (
 )
 step "06 labs trino 2 et 3" run_labs
 echo "=== [$(now)] TERMINE"; cat "$STATUS"
+}
+main
+wait_for_rerun
