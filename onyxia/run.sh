@@ -186,6 +186,8 @@ run_labs() (
   cp lab2.json lab3.json env.json "$RES/"
 )
 step "06 labs trino 2 et 3" run_labs
+compare_spark() { cd "$SRC" && spark_run spark_compare.py && cp spark.json "$RES/"; }
+step "07 comparaison spark" compare_spark
 echo "=== [$(now)] TERMINE"; cat "$STATUS"
 }
 main
