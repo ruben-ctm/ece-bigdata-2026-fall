@@ -102,22 +102,22 @@
 \section{Environnement et données}
 \subsection{Infrastructure utilisée}
 
-Les labs ont été exécutés sur la \textbf{plateforme Adaltas} (Onyxia), dans mon espace \texttt{user-r-combe-tamain-ece}. Quatre briques tournent dans ce namespace (Figure~\ref{fig:env_docker}) :
+Les labs ont été exécutés sur la \textbf{plateforme Adaltas} (Onyxia), dans mon espace \texttt{user-r-combe-\allowbreak tamain-ece}. Quatre briques tournent dans ce namespace (Figure~\ref{fig:env_docker}) :
 
 \begin{itemize}
 	\item le service \textbf{\texttt{vscode-pyspark}}, qui lance les commandes et Spark en mode local ;
 	\item \textbf{Apache Polaris 1.8.0} et sa base PostgreSQL, déployés avec le chart Helm du lab ;
 	\item \textbf{Trino 480} (chart Helm 1.45.0), coordinateur seul ;
-	\item le stockage \textbf{S3 de la plateforme}, bucket \texttt{user-r-combe-tamain-ece}.
+	\item le stockage \textbf{S3 de la plateforme}, bucket \texttt{user-r-combe-\allowbreak tamain-ece}.
 \end{itemize}
 
 \shot{env_docker}{1}{Pods et releases Helm du namespace (\texttt{kubectl get pods}, \texttt{helm list}).}
 
-Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-r-combe-tamain-ece/warehouse/} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), défini dans les valeurs du chart Helm (annexe~A).
+Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-r-combe-\allowbreak tamain-ece/\allowbreak warehouse/} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), défini dans les valeurs du chart Helm (annexe~A).
 
 \shot{env_polaris}{1}{Catalogue Polaris et état du serveur Trino.}
 
-\Q{Mode d'exécution.}Pour gagner du temps, les étapes préalables (génération des données, silver Spark, déploiement de Polaris et de Trino) les cellules des labs 2 et 3 et la comparaison avec Spark ont été enchaînées par un script lancé à l'initialisation du service, au lieu d'être tapées à la main. Les commandes et requêtes sont celles des labs ; les scripts Spark sont en annexe~B. Le cluster étant très chargé, le déploiement de Polaris a duré environ 12 minutes (pods en attente de CPU).
+\Q{Mode d'exécution.}Pour gagner du temps, les étapes préalables (génération des données, silver Spark, déploiement de Polaris et de Trino), les cellules des labs 2 et 3 et la comparaison avec Spark ont été enchaînées par un script lancé à l'initialisation du service, au lieu d'être tapées à la main. Les commandes et requêtes sont celles des labs ; les scripts Spark sont en annexe~B. Le cluster étant très chargé, le déploiement de Polaris a demandé deux tentatives et environ 35 minutes au total : la première a échoué au bout de 15 minutes, des pods restant en attente de CPU, la seconde a abouti.
 
 \subsection{Données}
 
@@ -171,7 +171,7 @@ Les tables cachées \texttt{\$snapshots}, \texttt{\$history} et \texttt{\$files}
 
 \shot{l2_snap}{0.75}{Snapshots et historique de \texttt{silver.orders}.}
 
-\Q{Combien de snapshots, écrits par quel moteur ?}\textbf{1 seul snapshot}, de type \texttt{overwrite}, écrit par \textbf{Spark} (le \texttt{createOrReplace} du lab 07). L'exemple du lab en montre 3, car il ajoute des écritures ultérieures que je n'ai pas faites.
+\Q{Combien de snapshots, écrits par quel moteur ?}\textbf{1 seul snapshot}, de type \texttt{overwrite}, écrit par \textbf{Spark} (le \texttt{createOrReplace} du lab 07). L'exemple du lab en montre 3 ; je n'ai fait que la création de la table, sans les ajouts éventuels des exercices du lab 07.
 
 \shot{l2_files}{1}{Fichiers de \texttt{silver.orders} : \texttt{\$files} et \texttt{aws s3 ls} (lignes \texttt{/data/}).}
 
@@ -216,7 +216,7 @@ Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le s
 
 \Q{Effet de \texttt{current\_date} ?}L'âge change chaque jour, donc \texttt{user\_activity} est périmée dès le lendemain : elle doit être reconstruite au moins une fois par jour, ou stocker la date de naissance et calculer l'âge à la lecture.
 
-\Q{Où sont les fichiers de gold, et qui a décidé ?}Sous \texttt{s3://user-r-combe-tamain-ece/warehouse/gold/<table>-<identifiant>/data/} (Figure~\ref{fig:l3_storage}). L'emplacement vient de Polaris : base \texttt{default-base-location} du catalogue, plus le nom de la table et un suffixe unique.
+\Q{Où sont les fichiers de gold, et qui a décidé ?}Dans le bucket, sous \texttt{warehouse/gold/}, un dossier par table, de la forme \texttt{<table>-<identifiant>/data/} (Figure~\ref{fig:l3_storage}). L'emplacement vient de Polaris : base \texttt{default-base-location} du catalogue, plus le nom de la table et un suffixe unique.
 
 \subsection{Validation}
 
@@ -240,7 +240,7 @@ Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le s
 
 \shot{l2_spark}{1}{\texttt{top\_products} reconstruit avec Spark et comparaison avec la table de Trino.}
 
-\textbf{Résultats.} Les deux tables contiennent les 6 mêmes produits : \textbf{0 ligne de différence} entre \texttt{top\_products} (Trino) et \texttt{top\_products\_spark} (Spark). En comparant avec l'état \emph{actuel} de silver, 2 lignes diffèrent (une dans chaque sens) : le croissant passe de 491 commandes et 1\,523 unités à 492 et 1\,526, à cause de la commande ajoutée à l'exercice 3 (3 unités). C'est la table de Trino qui est en retard sur silver, pas une erreur de calcul.
+\textbf{Résultats.} Les deux tables contiennent les 6 mêmes produits : \textbf{0 ligne de différence} entre \texttt{top\_products} (Trino) et \texttt{top\_products\_}\allowbreak\texttt{spark} (Spark). En comparant avec l'état \emph{actuel} de silver, 2 lignes diffèrent (une dans chaque sens) : le croissant passe de 491 commandes et 1\,523 unités à 492 et 1\,526, à cause de la commande ajoutée à l'exercice 3 (3 unités). C'est la table de Trino qui est en retard sur silver, pas une erreur de calcul.
 
 La Figure~\ref{fig:l2_spark2} montre deux différences entre les moteurs : \texttt{units\_rank} est un \texttt{bigint} chez Trino et un \texttt{int} chez Spark (\texttt{rank()} ne renvoie pas le même type), et la table de Trino a 3 snapshots (\texttt{append}, \texttt{delete}, \texttt{append} après le rafraîchissement) contre 1 \texttt{overwrite} pour celle de Spark (\texttt{createOrReplace}).
 
@@ -309,7 +309,7 @@ Les trois contrôles de l'énoncé passent sans erreur (Figure~\ref{fig:l3_valid
 
 \shot{l3_ex1}{1}{Table partitionnée : partitions, fichiers et comparaison avec la table non partitionnée.}
 
-Avec un filtre sur février 2020 (Figure~\ref{fig:l3_ex1b}), la table non partitionnée lit \textbf{50 lignes} (80\,\% filtrées) et la partitionnée \textbf{10 lignes} : seul le fichier du mois est lu (élagage de partitions). À 50 lignes il n'y a pas de gain de temps mesurable ; l'intérêt apparaît avec de gros volumes.
+Avec un filtre sur février 2020 (Figure~\ref{fig:l3_ex1b}), la table non partitionnée lit \textbf{50 lignes} (80\,\% filtrées) et la partitionnée \textbf{10 lignes} : seul le fichier du mois est lu (élagage de partitions). Les durées d'exécution (1,60~s contre 0,70~s) viennent d'une seule mesure sur 50 lignes et ne sont pas significatives ; ce que la mesure démontre, c'est la lecture de 10 lignes au lieu de 50, dont l'intérêt apparaît sur de gros volumes.
 
 \shot{l3_ex1b}{1}{\texttt{EXPLAIN ANALYZE} avec filtre sur un mois : sans partition (haut) et avec (bas).}
 
@@ -321,7 +321,7 @@ Avec un filtre sur février 2020 (Figure~\ref{fig:l3_ex1b}), la table non partit
 
 \subsubsection{Exercice 3 : INSERT, MERGE et time travel}
 
-Une commande est ajoutée à \texttt{silver.orders} (2\,829 devient 2\,830), puis \texttt{orders\_by\_state\_month} est rafraîchie par \texttt{MERGE} : 51 lignes touchées (50 mises à jour, 1 nouvelle combinaison état-mois). La table a ensuite 2 snapshots (\texttt{append}, \texttt{overwrite}). Le time travel sur le premier donne 2\,829 commandes, la table actuelle 2\,830 (Figure~\ref{fig:l3_ex3}).
+Une commande est ajoutée à \texttt{silver.orders} (2\,829 devient 2\,830), puis \texttt{orders\_by\_state\_month} est rafraîchie par \texttt{MERGE} : 51 lignes touchées (la table passe de 50 à 51 lignes : une nouvelle combinaison état-mois, les autres sont mises à jour). La table a ensuite 2 snapshots (\texttt{append}, \texttt{overwrite}). Le time travel sur le premier donne 2\,829 commandes, la table actuelle 2\,830 (Figure~\ref{fig:l3_ex3}).
 
 \shot{l3_ex3}{0.9}{\texttt{INSERT} dans silver, \texttt{MERGE} dans gold et lecture de l'état précédent.}
 
