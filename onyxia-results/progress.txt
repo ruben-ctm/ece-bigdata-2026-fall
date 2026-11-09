@@ -32,3 +32,15 @@ vscode-pyspark-430512-0    1/1     Running   0          31m
 115s        Warning   Unhealthy                         pod/polaris-5b5d597f8b-qd6x9                      Readiness probe failed: Get "http://10.0.7.33:8182/q/health/ready": dial tcp 10.0.7.33:8182: connect: connection refused
 101s        Warning   FailedScheduling                  pod/polaris-bootstrap-6m2dz                       0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
 101s        Normal    SuccessfulCreate                  job/polaris-bootstrap                             Created pod: polaris-bootstrap-6m2dz
+--- progress 12:25:21
+NAME                       READY   STATUS    RESTARTS   AGE
+polaris-5b5d597f8b-qd6x9   1/1     Running   0          10m
+polaris-bootstrap-6m2dz    0/1     Pending   0          4m13s
+polaris-postgresql-0       1/1     Running   0          10m
+vscode-pyspark-430512-0    1/1     Running   0          33m
+5m18s       Normal    Pulled                            pod/polaris-5b5d597f8b-qd6x9                      Container image "apache/polaris:1.8.0" already present on machine and can be accessed by the pod
+5m18s       Normal    Created                           pod/polaris-5b5d597f8b-qd6x9                      Container created
+5m18s       Normal    Started                           pod/polaris-5b5d597f8b-qd6x9                      Container started
+4m27s       Warning   Unhealthy                         pod/polaris-5b5d597f8b-qd6x9                      Readiness probe failed: Get "http://10.0.7.33:8182/q/health/ready": dial tcp 10.0.7.33:8182: connect: connection refused
+4m13s       Warning   FailedScheduling                  pod/polaris-bootstrap-6m2dz                       0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+4m13s       Normal    SuccessfulCreate                  job/polaris-bootstrap                             Created pod: polaris-bootstrap-6m2dz
