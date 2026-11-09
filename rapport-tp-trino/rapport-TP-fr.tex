@@ -117,7 +117,7 @@ Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-
 
 \shot{env_polaris}{1}{Catalogue Polaris et état du serveur Trino.}
 
-\Q{Mode d'exécution.}Pour gagner du temps, les étapes préalables (génération des données, silver Spark, déploiement de Polaris et de Trino) et les cellules des labs 2 et 3 ont été enchaînées par un script lancé à l'initialisation du service, au lieu d'être tapées à la main. Les commandes et requêtes sont celles des labs ; le script d'enregistrement de silver dans Polaris est en annexe~B. Le cluster étant très chargé, le déploiement de Polaris a duré environ 12 minutes (pods en attente de CPU).
+\Q{Mode d'exécution.}Pour gagner du temps, les étapes préalables (génération des données, silver Spark, déploiement de Polaris et de Trino) les cellules des labs 2 et 3 et la comparaison avec Spark ont été enchaînées par un script lancé à l'initialisation du service, au lieu d'être tapées à la main. Les commandes et requêtes sont celles des labs ; les scripts Spark sont en annexe~B. Le cluster étant très chargé, le déploiement de Polaris a duré environ 12 minutes (pods en attente de CPU).
 
 \subsection{Données}
 
@@ -129,7 +129,7 @@ Les CSV viennent du générateur du lab \texttt{uv} (Faker, graine 42), recopié
 
 La couche silver est construite par PySpark comme dans le lab 07 (mêmes règles : renommage, \texttt{trim}/\texttt{lower}, découpage de l'adresse, dédoublonnage par fenêtre) et écrite en tables Iceberg dans le catalogue \texttt{hadoop} \texttt{lab}. Le journal de l'exécution donne 2\,829 commandes, 2\,832 avec les 3 doublons ajoutés volontairement, puis 2\,829 après dédoublonnage. Le lab 09 enregistre ensuite \texttt{silver.orders} dans Polaris sans copier les données, et recrée \texttt{silver.users} via Polaris.
 
-Ce qui n'a pas été fait : la partie « Compare with Spark » du lab 2 (la même table gold construite avec Spark) et l'exercice~5 du lab 3. Les dates de naissance diffèrent de l'exemple du lab (version de Faker), sans effet sur les résultats.
+Les dates de naissance diffèrent de l'exemple du lab (version de Faker), sans effet sur les résultats.
 
 %=====================================================================
 \section{Lab 2 : de silver à gold avec Trino}
@@ -236,13 +236,21 @@ Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le s
 
 \subsection{Comparaison avec Spark}
 
-Cette partie n'a pas été exécutée (je n'ai pas reconstruit \texttt{top\_products} avec Spark). Réponses de principe, tirées de ce que j'ai observé côté Trino et de ce que demande le lab Spark :
+\textbf{Problème :} construire la même table \texttt{top\_products} avec Spark et la comparer à celle de Trino. \textbf{Solution :} une session Spark, connectée à Polaris avec le principal \texttt{dev}, relit \texttt{silver.orders} et écrit \texttt{gold.top\_products\_spark}. Pour comparer sur les mêmes données, Spark lit \texttt{silver.orders} \textbf{au premier snapshot}, celui sur lequel Trino a construit sa table : un \texttt{INSERT} y a été fait depuis, à l'exercice 3 du lab 3 (Figure~\ref{fig:l2_spark}).
 
-\begin{itemize}
-	\item \textbf{Besoins au-delà de la requête.} Trino : un client Python (\texttt{trino}) et une connexion, rien d'autre. Spark : une session, le jar Iceberg, \texttt{hadoop-aws} et des identifiants S3 temporaires.
-	\item \textbf{Tableau de bord toutes les minutes :} Trino (latence faible). \textbf{Transformation nocturne de 10~To :} Spark (reprise sur perte de partition). \textbf{Exploration de silver par un data scientist :} Trino.
-	\item \textbf{Tolérance aux pannes.} Si un worker est perdu, Trino fait échouer la requête. C'est acceptable ici (requêtes de moins d'une seconde, relancées sans coût) mais pas pour une transformation de 10~To qui dure des heures et serait à refaire entièrement.
-\end{itemize}
+\shot{l2_spark}{1}{\texttt{top\_products} reconstruit avec Spark et comparaison avec la table de Trino.}
+
+\textbf{Résultats.} Les deux tables contiennent les 6 mêmes produits : \textbf{0 ligne de différence} entre \texttt{top\_products} (Trino) et \texttt{top\_products\_spark} (Spark). En comparant avec l'état \emph{actuel} de silver, 2 lignes diffèrent (une dans chaque sens) : le croissant passe de 491 commandes et 1\,523 unités à 492 et 1\,526, à cause de la commande ajoutée à l'exercice 3 (3 unités). C'est la table de Trino qui est en retard sur silver, pas une erreur de calcul.
+
+La Figure~\ref{fig:l2_spark2} montre deux différences entre les moteurs : \texttt{units\_rank} est un \texttt{bigint} chez Trino et un \texttt{int} chez Spark (\texttt{rank()} ne renvoie pas le même type), et la table de Trino a 3 snapshots (\texttt{append}, \texttt{delete}, \texttt{append} après le rafraîchissement) contre 1 \texttt{overwrite} pour celle de Spark (\texttt{createOrReplace}).
+
+\shot{l2_spark2}{0.8}{Types, snapshots et temps de création de la session Spark.}
+
+\Q{Besoins au-delà de la requête.}Trino : un client Python (\texttt{trino}) et une connexion. Spark : une session de 6,9~s à créer, le jar Iceberg (téléchargé depuis Maven Central), le connecteur S3A, les identifiants S3 temporaires, les identifiants Polaris et environ quinze lignes de configuration du catalogue REST, en mode \texttt{local[*]}.
+
+\Q{Trino ou Spark ?}Tableau de bord rafraîchi toutes les minutes sur gold : \textbf{Trino} (pas de session à démarrer, latence faible). Transformation nocturne de 10~To de fichiers bronze : \textbf{Spark} (reprise des partitions perdues). Exploration de silver par un data scientist avec une requête : \textbf{Trino}.
+
+\Q{Tolérance aux pannes.}Si un worker est perdu, Trino fait échouer la requête. C'est acceptable ici (requêtes de quelques secondes, relancées sans coût) mais pas pour une transformation de 10~To qui dure des heures et serait à refaire entièrement. Cette réponse vient du cours et non d'un essai : je n'ai pas provoqué de panne.
 
 %=====================================================================
 \section{Lab 3 : schéma en étoile}
@@ -327,9 +335,11 @@ Pour voir un effet, je l'ai appliqué à \texttt{orders\_by\_state\_month}, ré�
 
 \shot{l3_ex4b}{0.95}{\texttt{optimize} sur \texttt{orders\_by\_state\_month} : snapshots et fichiers avant et après.}
 
-\subsubsection{Exercice 5}
+\subsubsection{Exercice 5 : même agrégation avec Spark}
 
-Non réalisé : il demande une session Spark connectée à Polaris, que je n'ai pas utilisée pour ces labs.
+L'agrégation de \texttt{orders\_by\_state\_month} est exécutée dans Spark, connecté à Polaris, sur l'état actuel de silver (Figure~\ref{fig:l3_ex5}). Spark renvoie \textbf{51 lignes et 2\,830 commandes}, comme la table gold de Trino (mise à jour par le \texttt{MERGE} de l'exercice 3) : \textbf{0 ligne de différence} entre les deux, dans les deux sens. Les deux moteurs calculent donc la même chose à partir des mêmes tables Iceberg, via le même catalogue.
+
+\shot{l3_ex5}{1}{Agrégation Spark et comparaison avec la table gold de Trino.}
 
 \subsection{Stockage des tables gold}
 
@@ -341,8 +351,9 @@ La Figure~\ref{fig:l3_storage} liste les fichiers de données de toutes les tabl
 \section{Bilan}
 
 \begin{itemize}
-	\item Lab 2 et lab 3 exécutés de bout en bout sur le cluster Adaltas, sans erreur, sauf la comparaison Spark (lab 2) et l'exercice 5 (lab 3), non faits.
+	\item Lab 2 et lab 3 exécutés de bout en bout sur le cluster Adaltas, sans erreur, y compris la comparaison avec Spark (lab 2) et l'exercice 5 (lab 3).
 	\item Les données du générateur donnent 2\,829 commandes et non 5\,000 comme l'annonçaient les labs.
+	\item Trino et Spark donnent des résultats identiques sur les mêmes tables Iceberg ; seule la table gold \texttt{top\_products} de Trino est en retard de 2 lignes sur l'état actuel de silver.
 	\item Points techniques à retenir : jointure \texttt{REPLICATED} choisie par Trino pour une dimension de 50 lignes ; l'élagage de partitions divise par 5 les lignes lues sur l'exemple (50 contre 10) ; \texttt{DELETE} puis \texttt{INSERT} ouvre une fenêtre à table vide (3,6~s ici), contrairement à \texttt{MERGE} ; les clés \texttt{row\_number()} changent à la reconstruction et cassent le lien avec le fait.
 \end{itemize}
 
@@ -354,5 +365,6 @@ La Figure~\ref{fig:l3_storage} liste les fichiers de données de toutes les tabl
 \subsection{Scripts Spark}
 \lstinputlisting[caption={silver\_spark.py : couche silver du lab 07}]{annexes/silver_spark.py}
 \lstinputlisting[caption={register\_polaris.py : enregistrement dans Polaris (lab 09)}]{annexes/register_polaris.py}
+\lstinputlisting[caption={spark\_compare.py : comparaison Trino et Spark (lab 2 et exercice 5 du lab 3)}]{annexes/spark_compare.py}
 
 \end{document}
