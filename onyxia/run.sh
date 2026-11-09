@@ -7,6 +7,7 @@ BRANCH="${TP_BRANCH:-claude/epic-wright-po7bx7}"
 HOME="${HOME:-/home/onyxia}"
 W="$HOME/work/tp-adaltas"; SRC="$W/src"; RES="$W/results"
 mkdir -p "$W" "$RES"
+cd "$W" || exit 1
 exec > >(tee -a "$RES/run.txt") 2>&1
 LOCAL_TEST="${LOCAL_TEST:-0}"      # 1 = test hors cluster (pas de kubectl/helm)
 STATUS="$RES/steps.tsv"; : > "$STATUS"
