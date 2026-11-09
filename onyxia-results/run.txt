@@ -8,3 +8,41 @@ Completed 7.2 KiB/7.2 KiB (52.5 KiB/s) with 1 file(s) remainingupload: ../../us
 Completed 323.8 KiB/323.8 KiB (2.7 MiB/s) with 1 file(s) remainingupload: ../../orders.csv to s3://user-r-combe-tamain-ece/bronze/orders.csv
 2026-11-09 11:51:55     331568 orders.csv
 2026-11-09 11:51:53       7351 users.csv
+[push] ok
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+=== [11:52:03] 02 silver spark
+python=/opt/python/bin/python3 spark_home=/usr/local/lib/spark
+ModuleNotFoundError: No module named 'pyspark'
+openjdk version "21.0.12" 2026-07-21
+WARNING: Using incubator modules: jdk.incubator.vector
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-bf494cb2-347b-4517-9580-5401a045fd31;1.0
+	confs: [default]
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+downloading https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-4.1_2.13/1.11.0/iceberg-spark-runtime-4.1_2.13-1.11.0.jar ...
+	[SUCCESSFUL ] org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0!iceberg-spark-runtime-4.1_2.13.jar (1876ms)
+:: resolution report :: resolve 971ms :: artifacts dl 1882ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|      default     |   1   |   1   |   1   |   0   ||   1   |   1   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-bf494cb2-347b-4517-9580-5401a045fd31
+	confs: [default]
+	1 artifacts copied, 0 already retrieved (46835kB/57ms)
+Original: 2829
+With duplicates: 2832
+After deduplication: 2829
+SILVER OK users=50 orders=2829
++-------------------+---------+-----------------------+
+|snapshot_id        |operation|committed_at           |
++-------------------+---------+-----------------------+
+|8407732450608481646|overwrite|2026-11-09 11:52:46.239|
++-------------------+---------+-----------------------+
+
