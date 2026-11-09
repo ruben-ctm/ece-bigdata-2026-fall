@@ -9,3 +9,14 @@ vscode-pyspark-430512-0    1/1     Running   0          26m
 2m19s       Normal    Pulled                            pod/polaris-postgresql-0                          Container image "registry-1.docker.io/bitnami/postgresql:latest" already present on machine and can be accessed by the pod
 2m18s       Normal    Started                           pod/polaris-postgresql-0                          Container started
 2m7s        Warning   Unhealthy                         pod/polaris-postgresql-0                          Readiness probe failed: 127.0.0.1:5432 - no response
+--- progress 12:20:17
+NAME                       READY   STATUS    RESTARTS   AGE
+polaris-5b5d597f8b-qd6x9   0/1     Running   0          5m1s
+polaris-postgresql-0       1/1     Running   0          5m1s
+vscode-pyspark-430512-0    1/1     Running   0          28m
+35s         Normal    Created                           pod/polaris-5b5d597f8b-qd6x9                      Container created
+35s         Normal    Pulled                            pod/polaris-5b5d597f8b-qd6x9                      Container image "apache/polaris-admin-tool:1.8.0" already present on machine and can be accessed by the pod
+14s         Normal    Pulled                            pod/polaris-5b5d597f8b-qd6x9                      Container image "apache/polaris:1.8.0" already present on machine and can be accessed by the pod
+14s         Normal    Created                           pod/polaris-5b5d597f8b-qd6x9                      Container created
+14s         Normal    Started                           pod/polaris-5b5d597f8b-qd6x9                      Container started
+3s          Warning   Unhealthy                         pod/polaris-5b5d597f8b-qd6x9                      Readiness probe failed: Get "http://10.0.7.33:8182/q/health/ready": dial tcp 10.0.7.33:8182: connect: connection refused
