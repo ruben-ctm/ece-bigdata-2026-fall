@@ -102,19 +102,22 @@
 \section{Environnement et données}
 \subsection{Infrastructure utilisée}
 
-Les deux labs ont été exécutés sur une \textbf{réplique locale} de la plateforme, en conteneurs Docker, et non sur le cluster Kubernetes Adaltas (Onyxia). Trois services tournent (Figure~\ref{fig:env_docker}) :
+Les labs ont été exécutés sur la \textbf{plateforme Adaltas} (Onyxia), dans mon espace \texttt{user-r-combe-tamain-ece}. Quatre briques tournent dans ce namespace (Figure~\ref{fig:env_docker}) :
 
 \begin{itemize}
-	\item \textbf{Trino 480}, coordinateur seul, même version que le chart Helm du lab de déploiement ;
-	\item \textbf{Apache Polaris 1.8.0}, catalogue Iceberg REST avec authentification OAuth2 ;
-	\item \textbf{SeaweedFS}, stockage compatible S3 (bucket \texttt{lab}), à la place du S3 de la plateforme.
+	\item le service \textbf{\texttt{vscode-pyspark}}, qui lance les commandes et Spark en mode local ;
+	\item \textbf{Apache Polaris 1.8.0} et sa base PostgreSQL, déployés avec le chart Helm du lab ;
+	\item \textbf{Trino 480} (chart Helm 1.45.0), coordinateur seul ;
+	\item le stockage \textbf{S3 de la plateforme}, bucket \texttt{user-r-combe-tamain-ece}.
 \end{itemize}
 
-\shot{env_docker}{1}{Conteneurs de la réplique (\texttt{docker compose ps}).}
+\shot{env_docker}{1}{Pods et releases Helm du namespace (\texttt{kubectl get pods}, \texttt{helm list}).}
 
-Le catalogue Polaris \texttt{lab} pointe vers \texttt{s3://lab/warehouse} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), comme dans le lab de déploiement. Les fichiers de configuration sont en annexe~A.
+Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-r-combe-tamain-ece/warehouse/} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), défini dans le fichier de valeurs en annexe~A.
 
-\shot{env_polaris}{1}{Catalogue Polaris \texttt{lab} et état du serveur Trino.}
+\shot{env_polaris}{1}{Catalogue Polaris et état du serveur Trino.}
+
+\Q{Mode d'exécution.}Pour gagner du temps, les étapes préalables (génération des données, silver Spark, déploiement de Polaris et de Trino) et les cellules des labs 2 et 3 ont été enchaînées par un script lancé à l'initialisation du service, au lieu d'être tapées à la main. Les commandes et requêtes sont celles des labs ; le script d'enregistrement de silver dans Polaris est en annexe~B. Le cluster étant très chargé, le déploiement de Polaris a duré environ 12 minutes (pods en attente de CPU).
 
 \subsection{Données}
 
@@ -122,21 +125,17 @@ Les CSV viennent du générateur du lab \texttt{uv} (Faker, graine 42), recopié
 
 \Q{Écart avec l'énoncé.}Les labs annoncent 5\,000 commandes. Ce n'est pas ce que produit le générateur : \texttt{orders.csv} contient 2\,829 lignes, pour 331\,568 octets (environ 117 octets par ligne). Tous les comptages de ce rapport sont donc 2\,829 et non 5\,000.
 
-\shot{env_data}{0.95}{Tailles des CSV, extrait des fichiers et nombre de lignes.}
+\shot{env_data}{0.95}{Tailles des CSV, extrait des fichiers, nombre de lignes et contenu du bucket.}
 
-La couche silver reproduit les règles du lab Spark (renommage, \texttt{trim}/\texttt{lower}, découpage de l'adresse par expressions régulières, dédoublonnage), mais en Python, puis les tables sont écrites en Iceberg via Trino et Polaris (script en annexe~B). Conséquences, à garder en tête :
+La couche silver est construite par PySpark comme dans le lab 07 (mêmes règles : renommage, \texttt{trim}/\texttt{lower}, découpage de l'adresse, dédoublonnage par fenêtre) et écrite en tables Iceberg dans le catalogue \texttt{hadoop} \texttt{lab}. Le journal de l'exécution donne 2\,829 commandes, 2\,832 avec les 3 doublons ajoutés volontairement, puis 2\,829 après dédoublonnage. Le lab 09 enregistre ensuite \texttt{silver.orders} dans Polaris sans copier les données, et recrée \texttt{silver.users} via Polaris.
 
-\begin{itemize}
-	\item pas de Spark : les snapshots de \texttt{silver} sont écrits par Trino, et non par Spark ;
-	\item la partie « Compare with Spark » du lab 2 et l'exercice~5 du lab 3 n'ont pas été exécutés ;
-	\item les dates de naissance diffèrent de l'exemple du lab (version de Faker), sans effet sur les résultats.
-\end{itemize}
+Ce qui n'a pas été fait : la partie « Compare with Spark » du lab 2 (la même table gold construite avec Spark) et l'exercice~5 du lab 3. Les dates de naissance diffèrent de l'exemple du lab (version de Faker), sans effet sur les résultats.
 
 %=====================================================================
 \section{Lab 2 : de silver à gold avec Trino}
 \subsection{Connexion, catalogues et types}
 
-\textbf{Problème :} se connecter à Trino depuis Python et repérer les tables silver. \textbf{Solution :} client \texttt{trino} (DB-API) et une fonction \texttt{sql()} qui exécute puis récupère les résultats dans un \texttt{DataFrame}. \textbf{Résultat :} Trino 480, six catalogues dont \texttt{lakehouse}, deux tables dans \texttt{lakehouse.silver} (Figure~\ref{fig:l2_catalogs}).
+\textbf{Problème :} se connecter à Trino depuis Python et repérer les tables silver. \textbf{Solution :} client \texttt{trino} (DB-API) et une fonction \texttt{sql()} qui exécute puis récupère les résultats dans un \texttt{DataFrame}. \textbf{Résultat :} Trino 480, quatre catalogues dont \texttt{lakehouse} (\texttt{lakehouse}, \texttt{system}, \texttt{tpcds}, \texttt{tpch}), deux tables dans \texttt{lakehouse.silver} (Figure~\ref{fig:l2_catalogs}).
 
 \shot{l2_catalogs}{0.65}{Version, catalogues, schémas et tables.}
 
@@ -172,11 +171,11 @@ Les tables cachées \texttt{\$snapshots}, \texttt{\$history} et \texttt{\$files}
 
 \shot{l2_snap}{0.75}{Snapshots et historique de \texttt{silver.orders}.}
 
-\Q{Combien de snapshots, écrits par quel moteur ?}\textbf{7 snapshots}, tous de type \texttt{append}, écrits par \textbf{Trino} (la création de la table, puis 6 insertions de 500 lignes au plus). Dans le lab d'origine, ce serait Spark (3 snapshots dans l'exemple) : c'est un écart de ma réplique.
+\Q{Combien de snapshots, écrits par quel moteur ?}\textbf{1 seul snapshot}, de type \texttt{overwrite}, écrit par \textbf{Spark} (le \texttt{createOrReplace} du lab 07). L'exemple du lab en montre 3, car il ajoute des écritures ultérieures que je n'ai pas faites.
 
 \shot{l2_files}{1}{Fichiers de \texttt{silver.orders} : \texttt{\$files} et \texttt{aws s3 ls} (lignes \texttt{/data/}).}
 
-\Q{\texttt{aws s3 ls} contre \texttt{\$files} ?}On retrouve les mêmes 6 fichiers Parquet (5 de 500 lignes et 1 de 329, soit 2\,829). \texttt{\$files} n'exige \textbf{aucun accès au bucket de ma part} : c'est le serveur Trino qui lit les métadonnées avec ses propres identifiants, localisées par Polaris. \texttt{aws s3 ls} utilise mes identifiants S3.
+\Q{\texttt{aws s3 ls} contre \texttt{\$files} ?}On retrouve le même fichier Parquet unique de \texttt{silver.orders} (2\,829 lignes, 84\,055 octets) ; le listing S3 montre en plus les deux fichiers de \texttt{silver.users}, celui de Spark et celui recréé via Polaris. \texttt{\$files} n'exige \textbf{aucun accès au bucket de ma part} : c'est le serveur Trino qui lit les métadonnées avec ses propres identifiants, localisées par Polaris. \texttt{aws s3 ls} utilise mes identifiants S3.
 
 \subsection{Plan et exécution d'une requête}
 
@@ -195,14 +194,11 @@ Dans la Figure~\ref{fig:l2_plan} :
 
 \shot{l2_analyze}{1}{\texttt{EXPLAIN ANALYZE} (extrait des lignes utiles).}
 
-Avec \texttt{EXPLAIN ANALYZE} (Figure~\ref{fig:l2_analyze}), l'exécution fait apparaître un fragment de plus (1 à 3) : le fragment 2 lit 2\,879 lignes (2\,829 + 50) avec 64,8~ms de CPU et 128~ko de mémoire de pointe, le fragment 3 lit les 50 utilisateurs. Le scan d'\texttt{orders} utilise 6 splits, soit un par fichier Parquet. Le filtre dynamique ne supprime rien (\texttt{Filtered: 0\%}), puisque tous les utilisateurs ont des commandes. À cette taille, l'analyse et la planification (98 + 77~ms) pèsent presque autant que l'exécution (481~ms).
+Avec \texttt{EXPLAIN ANALYZE} (Figure~\ref{fig:l2_analyze}), l'exécution fait apparaître un fragment de plus (1 à 3) : le fragment 2 lit 2\,879 lignes (2\,829 + 50) avec 177~ms de CPU et 128~ko de mémoire de pointe, le fragment 3 lit les 50 utilisateurs. Le scan d'\texttt{orders} utilise 1 split, soit un par fichier Parquet (il n'y en a qu'un). Le filtre dynamique ne supprime rien (\texttt{Filtered: 0\%}), puisque tous les utilisateurs ont des commandes. À cette taille, l'analyse et la planification (739 + 399~ms) représentent environ 40~\% du temps d'exécution (2,77~s).
 
 \shot{l2_runtime}{1}{Historique des requêtes (\texttt{system.runtime.queries}).}
 
-\texttt{system.runtime.queries} est accessible (Figure~\ref{fig:l2_runtime}) ; la ligne \texttt{RUNNING} est la requête d'historique elle-même. L'interface web de Trino (\texttt{/ui}) montre la même requête exécutée sans \texttt{EXPLAIN} (Figure~\ref{fig:ui_stages}) : elle y apparaît en \textbf{5 stages} (0 à 4), plus que les 3 fragments du plan ci-dessus : cette version ajoute un \texttt{ORDER BY}, dont le tri s'ajoute aux étapes.
-
-\shot{ui_head}{0.8}{Interface web Trino : détail de la requête (durées, lignes lues).}
-\shot{ui_stages}{0.8}{Interface web Trino : stages de la requête.}
+\texttt{system.runtime.queries} est accessible (Figure~\ref{fig:l2_runtime}) ; la ligne \texttt{RUNNING} est la requête d'historique elle-même. \texttt{EXPLAIN (TYPE DISTRIBUTED)} a pris 1,7~s et \texttt{EXPLAIN ANALYZE} 3,7~s, qui exécute vraiment la requête. L'interface web de Trino n'a pas été consultée : l'ingress est désactivé dans le chart (accès par \texttt{port-forward} uniquement), l'historique ci-dessus la remplace.
 
 \subsection{Couche gold}
 
@@ -220,7 +216,7 @@ Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le s
 
 \Q{Effet de \texttt{current\_date} ?}L'âge change chaque jour, donc \texttt{user\_activity} est périmée dès le lendemain : elle doit être reconstruite au moins une fois par jour, ou stocker la date de naissance et calculer l'âge à la lecture.
 
-\Q{Où sont les fichiers de gold, et qui a décidé ?}Sous \texttt{s3://lab/warehouse/gold/<table>-<identifiant>/data/} (Figure~\ref{fig:l3_storage}). L'emplacement vient de Polaris : base \texttt{default-base-location} du catalogue, plus le nom de la table et un suffixe unique.
+\Q{Où sont les fichiers de gold, et qui a décidé ?}Sous \texttt{s3://user-r-combe-tamain-ece/warehouse/gold/<table>-<identifiant>/data/} (Figure~\ref{fig:l3_storage}). L'emplacement vient de Polaris : base \texttt{default-base-location} du catalogue, plus le nom de la table et un suffixe unique.
 
 \subsection{Validation}
 
@@ -236,11 +232,11 @@ Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le s
 
 \Q{Combien de snapshots après le rafraîchissement ?}\textbf{3} : \texttt{append} (création), \texttt{delete}, \texttt{append}. Après le \texttt{DELETE}, la table contient 0 ligne ; après l'\texttt{INSERT}, 6. Le time travel sur le premier snapshot renvoie bien 6 produits.
 
-\Q{Que voit un tableau de bord entre les deux ?}Une table \textbf{vide} : chaque instruction est un commit séparé. Ici la fenêtre était d'environ une demi-seconde (0,5~s entre les deux commits), mais elle existe. Avec un \texttt{MERGE}, la mise à jour est un seul commit : le lecteur voit l'ancien état ou le nouveau, jamais un état vide.
+\Q{Que voit un tableau de bord entre les deux ?}Une table \textbf{vide} : chaque instruction est un commit séparé. Ici la fenêtre a duré 3,6~s (commit \texttt{delete} à 12:38:45,105, commit \texttt{append} à 12:38:48,706), mais elle existe. Avec un \texttt{MERGE}, la mise à jour est un seul commit : le lecteur voit l'ancien état ou le nouveau, jamais un état vide.
 
 \subsection{Comparaison avec Spark}
 
-Cette partie n'a pas été exécutée (pas de Spark dans mon environnement). Réponses de principe, tirées de ce que j'ai observé côté Trino et de ce que demande le lab Spark :
+Cette partie n'a pas été exécutée (je n'ai pas reconstruit \texttt{top\_products} avec Spark). Réponses de principe, tirées de ce que j'ai observé côté Trino et de ce que demande le lab Spark :
 
 \begin{itemize}
 	\item \textbf{Besoins au-delà de la requête.} Trino : un client Python (\texttt{trino}) et une connexion, rien d'autre. Spark : une session, le jar Iceberg, \texttt{hadoop-aws} et des identifiants S3 temporaires.
@@ -341,19 +337,18 @@ Non réalisé : il demande une session Spark connectée à Polaris, absente de m
 \section{Bilan}
 
 \begin{itemize}
-	\item Lab 2 et lab 3 exécutés de bout en bout, sauf la comparaison Spark (lab 2) et l'exercice 5 (lab 3).
-	\item Les résultats sont réels mais obtenus sur une réplique locale (Trino 480, Polaris 1.8.0, SeaweedFS). Les écarts avec l'énoncé viennent de là : silver écrite par Trino (7 snapshots \texttt{append}) et non par Spark, et 2\,829 commandes au lieu de 5\,000.
-	\item Points techniques à retenir : jointure \texttt{REPLICATED} choisie par Trino pour une dimension de 50 lignes ; l'élagage de partitions divise par 5 les lignes lues sur l'exemple (50 contre 10) ; \texttt{DELETE} puis \texttt{INSERT} ouvre une fenêtre à table vide, contrairement à \texttt{MERGE} ; les clés \texttt{row\_number()} changent à la reconstruction.
+	\item Lab 2 et lab 3 exécutés de bout en bout sur le cluster Adaltas, sans erreur, sauf la comparaison Spark (lab 2) et l'exercice 5 (lab 3), non faits.
+	\item Les données du générateur donnent 2\,829 commandes et non 5\,000 comme l'annonçaient les labs.
+	\item Points techniques à retenir : jointure \texttt{REPLICATED} choisie par Trino pour une dimension de 50 lignes ; l'élagage de partitions divise par 5 les lignes lues sur l'exemple (50 contre 10) ; \texttt{DELETE} puis \texttt{INSERT} ouvre une fenêtre à table vide (3,6~s ici), contrairement à \texttt{MERGE} ; les clés \texttt{row\_number()} changent à la reconstruction et cassent le lien avec le fait.
 \end{itemize}
 
 %=====================================================================
 \newpage
 \section{Annexes}
-\subsection{A. Configuration de la réplique}
-\lstinputlisting[caption={docker-compose.yml}]{annexes/docker-compose.yml}
-\lstinputlisting[caption={Catalogue Trino \texttt{lakehouse} (lakehouse.properties)}]{annexes/lakehouse.properties}
-\subsection{B. Initialisation du catalogue et de la couche silver}
-\lstinputlisting[caption={bootstrap.sh : bucket, catalogue Polaris, rôle, démarrage de Trino}]{annexes/bootstrap.sh}
-\lstinputlisting[caption={build\_silver.py : transformations silver et écriture Iceberg}]{annexes/build_silver.py}
+\subsection{A. Catalogue Trino}
+\lstinputlisting[caption={Valeurs du chart Helm de Trino, dont le catalogue \texttt{lakehouse} (trino-values.yaml)}]{annexes/trino-values.yaml}
+\subsection{B. Scripts Spark}
+\lstinputlisting[caption={silver\_spark.py : couche silver du lab 07}]{annexes/silver_spark.py}
+\lstinputlisting[caption={register\_polaris.py : enregistrement dans Polaris (lab 09)}]{annexes/register_polaris.py}
 
 \end{document}
