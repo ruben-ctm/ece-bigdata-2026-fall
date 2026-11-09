@@ -1,0 +1,10 @@
+=== [11:51:46] 00 sources
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+=== [11:51:50] 01 donnees bronze
+  7351 /home/onyxia/work/tp-adaltas/users.csv
+331568 /home/onyxia/work/tp-adaltas/orders.csv
+338919 total
+Completed 7.2 KiB/7.2 KiB (52.5 KiB/s) with 1 file(s) remainingupload: ../../users.csv to s3://user-r-combe-tamain-ece/bronze/users.csv
+Completed 323.8 KiB/323.8 KiB (2.7 MiB/s) with 1 file(s) remainingupload: ../../orders.csv to s3://user-r-combe-tamain-ece/bronze/orders.csv
+2026-11-09 11:51:55     331568 orders.csv
+2026-11-09 11:51:53       7351 users.csv
