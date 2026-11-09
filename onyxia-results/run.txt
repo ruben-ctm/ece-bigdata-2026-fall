@@ -46,3 +46,25 @@ SILVER OK users=50 orders=2829
 |8407732450608481646|overwrite|2026-11-09 11:52:46.239|
 +-------------------+---------+-----------------------+
 
+[push] ok
+=== [11:52:53] 03 deploiement polaris
+configmap/polaris-config created
+secret/polaris-credential created
+secret/polaris-s3 created
+"polaris" has been added to your repositories
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Saving 2 charts
+Downloading polaris from repo https://downloads.apache.org/polaris/helm-chart
+Downloading postgresql from repo oci://registry-1.docker.io/bitnamicharts
+Pulled: registry-1.docker.io/bitnamicharts/postgresql:18.12.15
+Digest: sha256:8ab742fa91169b2c317a0ffa061d279d4964a45850408a319c764b3798242ba2
+Deleting outdated charts
+Release "polaris" does not exist. Installing it now.
+Error: context deadline exceeded
+Error from server (NotFound): jobs.batch "polaris-bootstrap" not found
+!!! 03 deploiement polaris a echoue

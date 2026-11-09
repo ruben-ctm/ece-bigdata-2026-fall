@@ -1,0 +1,20 @@
+--- diag 12:07:57
+NAME                       READY   STATUS     RESTARTS   AGE   IP           NODE         NOMINATED NODE   READINESS GATES
+polaris-5d698f4bb4-nqpfc   0/1     Init:0/1   0          15m   10.0.7.173   compute-02   <none>           <none>
+polaris-postgresql-0       0/1     Pending    0          15m   <none>       <none>       <none>           <none>
+vscode-pyspark-430512-0    1/1     Running    0          16m   10.0.0.131   compute-03   <none>           <none>
+15m         Normal    SuccessfulCreate        statefulset/polaris-postgresql                    Create Pod polaris-postgresql-0 in StatefulSet polaris-postgresql successful
+15m         Normal    SuccessfulCreate        replicaset/polaris-5d698f4bb4                     Created pod: polaris-5d698f4bb4-nqpfc
+15m         Normal    ExternalProvisioning    persistentvolumeclaim/data-polaris-postgresql-0   Waiting for a volume to be created either by the external provisioner 'rook-ceph.rbd.csi.ceph.com' or manually by the system administrator. If volume creation is delayed, please verify that the provisioner is running and correctly registered.
+15m         Normal    SuccessfulCreate        statefulset/polaris-postgresql                    Create Claim data-polaris-postgresql-0 Pod polaris-postgresql-0 in StatefulSet polaris-postgresql success
+15m         Normal    NoPods                  poddisruptionbudget/polaris-postgresql            No matching pods found
+15m         Normal    Provisioning            persistentvolumeclaim/data-polaris-postgresql-0   External provisioner is provisioning volume for claim "user-r-combe-tamain-ece/data-polaris-postgresql-0"
+15m         Warning   FailedScheduling        pod/polaris-postgresql-0                          0/9 nodes are available: pod has unbound immediate PersistentVolumeClaims. not found
+15m         Normal    ScalingReplicaSet       deployment/polaris                                Scaled up replica set polaris-5d698f4bb4 from 0 to 1
+15m         Normal    ProvisioningSucceeded   persistentvolumeclaim/data-polaris-postgresql-0   Successfully provisioned volume pvc-9e3e681a-4cc6-4b02-9c62-9b5c43280f2f
+12m         Warning   FailedScheduling        pod/polaris-5d698f4bb4-nqpfc                      0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+12m         Normal    Scheduled               pod/polaris-5d698f4bb4-nqpfc                      Successfully assigned user-r-combe-tamain-ece/polaris-5d698f4bb4-nqpfc to compute-02
+12m         Normal    Created                 pod/polaris-5d698f4bb4-nqpfc                      Container created
+12m         Normal    Pulled                  pod/polaris-5d698f4bb4-nqpfc                      Container image "apache/polaris-admin-tool:1.8.0" already present on machine and can be accessed by the pod
+12m         Normal    Started                 pod/polaris-5d698f4bb4-nqpfc                      Container started
+58s         Warning   FailedScheduling        pod/polaris-postgresql-0                          0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
