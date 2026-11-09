@@ -1,0 +1,15 @@
+trino:
+  additionalCatalogs:
+    lakehouse: |-
+      connector.name=iceberg
+      iceberg.catalog.type=rest
+      iceberg.rest-catalog.uri=${ENV:POLARIS_URI}/api/catalog
+      iceberg.rest-catalog.warehouse=${ENV:POLARIS_CATALOG}
+      iceberg.rest-catalog.security=OAUTH2
+      iceberg.rest-catalog.oauth2.server-uri=${ENV:POLARIS_URI}/api/catalog/v1/oauth/tokens
+      iceberg.rest-catalog.oauth2.credential=${ENV:POLARIS_DEV_CREDENTIAL}
+      iceberg.rest-catalog.oauth2.scope=PRINCIPAL_ROLE:ALL
+      fs.native-s3.enabled=true
+      s3.endpoint=${ENV:S3_ENDPOINT}
+      s3.region=us-east-1
+      s3.path-style-access=true

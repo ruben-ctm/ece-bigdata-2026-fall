@@ -45,12 +45,12 @@
 \usepackage[labelfont=bf]{caption}
 \usepackage{float}
 \usepackage{listings}
-\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,frame=single,columns=fullflexible,keepspaces=true}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,frame=tb,columns=fullflexible,keepspaces=true,captionpos=t,aboveskip=6pt,belowskip=6pt}
 
 % Question
 \newcommand{\Q}[1]{\vspace{2mm}\par\textbf{\textcolor{ece}{#1}}\ }
 % Figure pleine largeur, hauteur bornée
-\newcommand{\shot}[3]{\begin{figure}[!ht]\centering\includegraphics[width=#2\textwidth,height=0.78\textheight,keepaspectratio]{images/#1.png}\caption{#3}\label{fig:#1}\end{figure}}
+\newcommand{\shot}[3]{\begin{figure}[H]\centering\includegraphics[width=#2\textwidth,height=0.78\textheight,keepaspectratio]{images/#1.png}\caption{#3}\label{fig:#1}\end{figure}}
 
 % Liens
 \usepackage[colorlinks=true,linkcolor=black,urlcolor=darkpowderblue]{hyperref}
@@ -113,7 +113,7 @@ Les labs ont été exécutés sur la \textbf{plateforme Adaltas} (Onyxia), dans 
 
 \shot{env_docker}{1}{Pods et releases Helm du namespace (\texttt{kubectl get pods}, \texttt{helm list}).}
 
-Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-r-combe-tamain-ece/warehouse/} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), défini dans le fichier de valeurs en annexe~A.
+Le catalogue Polaris porte le nom du namespace et pointe vers \texttt{s3://user-r-combe-tamain-ece/warehouse/} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), défini dans les valeurs du chart Helm (annexe~A).
 
 \shot{env_polaris}{1}{Catalogue Polaris et état du serveur Trino.}
 
@@ -329,9 +329,13 @@ Pour voir un effet, je l'ai appliqué à \texttt{orders\_by\_state\_month}, ré�
 
 \subsubsection{Exercice 5}
 
-Non réalisé : il demande une session Spark connectée à Polaris, absente de mon environnement.
+Non réalisé : il demande une session Spark connectée à Polaris, que je n'ai pas utilisée pour ces labs.
 
-\shot{l3_storage}{0.9}{Fichiers de données du schéma \texttt{gold} dans le bucket.}
+\subsection{Stockage des tables gold}
+
+La Figure~\ref{fig:l3_storage} liste les fichiers de données de toutes les tables de \texttt{gold} dans le bucket. Chaque table a son dossier \texttt{<table>-<identifiant>/data/}. \texttt{orders\_by\_state\_month\_part} a un sous-dossier par mois, ce qui explique ses 4 fichiers. \texttt{orders\_by\_state\_month} en montre 4 : le fichier d'origine, les deux écrits par le \texttt{MERGE} et celui issu de \texttt{optimize}. Les trois premiers restent dans le bucket parce que les anciens snapshots les référencent encore ; Iceberg ne les supprime pas à l'\texttt{optimize}.
+
+\shot{l3_storage}{0.95}{Fichiers de données du schéma \texttt{gold} dans le bucket.}
 
 %=====================================================================
 \section{Bilan}
@@ -345,9 +349,9 @@ Non réalisé : il demande une session Spark connectée à Polaris, absente de m
 %=====================================================================
 \newpage
 \section{Annexes}
-\subsection{A. Catalogue Trino}
-\lstinputlisting[caption={Valeurs du chart Helm de Trino, dont le catalogue \texttt{lakehouse} (trino-values.yaml)}]{annexes/trino-values.yaml}
-\subsection{B. Scripts Spark}
+\subsection{Catalogue Trino}
+\lstinputlisting[caption={Catalogue \texttt{lakehouse} dans les valeurs du chart Helm de Trino (extrait)}]{annexes/trino-catalog.yaml}
+\subsection{Scripts Spark}
 \lstinputlisting[caption={silver\_spark.py : couche silver du lab 07}]{annexes/silver_spark.py}
 \lstinputlisting[caption={register\_polaris.py : enregistrement dans Polaris (lab 09)}]{annexes/register_polaris.py}
 
