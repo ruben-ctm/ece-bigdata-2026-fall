@@ -34,6 +34,10 @@ step() { # step NOM commande...
   if "$@"; then echo -e "$name\tOK" >>"$STATUS"; else echo -e "$name\tECHEC" >>"$STATUS"; echo "!!! $name a echoue"; tail -n 120 "$RES/run.txt" > "$RES/fail_${name%% *}.txt"; diag; push_results; return 1; fi
   push_results
 }
+with_progress() { # lance une commande longue en poussant l'etat des pods toutes les 150 s
+  ( while sleep 150; do { echo "--- progress $(now)"; kubectl get pods 2>&1; kubectl get events --sort-by=.lastTimestamp 2>&1 | tail -6; } >>"$RES/progress.txt"; push_results >/dev/null 2>&1; done ) &
+  local bg=$!; "$@"; local rc=$?; kill "$bg" 2>/dev/null; return $rc
+}
 diag() {
   [ "$LOCAL_TEST" = 1 ] && return 0
   { echo "--- diag $(now)"; kubectl get pods -o wide 2>&1 | tail -20; kubectl get events --sort-by=.lastTimestamp 2>&1 | tail -15; } >>"$RES/diag.txt" 2>&1
@@ -124,7 +128,10 @@ deploy_polaris() (
   helm repo add polaris https://downloads.apache.org/polaris/helm-chart
   helm repo update
   helm dependency update polaris/deployment
-  helm upgrade --install polaris polaris/deployment --wait --timeout 15m
+  st=$(helm status polaris -o json 2>/dev/null | jq -r '.info.status // empty')
+  if [ -n "$st" ] && [ "$st" != deployed ]; then echo "release polaris en etat $st : reinstallation"; helm uninstall polaris --wait || true; kubectl delete pvc data-polaris-postgresql-0 --ignore-not-found; fi
+  with_progress helm upgrade --install polaris polaris/deployment --wait --timeout 40m \
+    --set postgresql.primary.resources.requests.cpu=10m --set polaris.resources.requests.cpu=20m
   curl -s http://polaris-mgmt:8182/q/health | head -5
   kubectl wait --for=condition=complete job/polaris-bootstrap --timeout=300s
 )
@@ -160,7 +167,10 @@ deploy_trino() (
   helm repo add trino https://trinodb.github.io/charts
   helm repo update
   helm dependency update ./trino/deployment
-  helm upgrade --install trino ./trino/deployment --wait --timeout 15m
+  st=$(helm status trino -o json 2>/dev/null | jq -r '.info.status // empty')
+  if [ -n "$st" ] && [ "$st" != deployed ]; then echo "release trino en etat $st : reinstallation"; helm uninstall trino --wait || true; fi
+  with_progress helm upgrade --install trino ./trino/deployment --wait --timeout 40m \
+    --set trino.coordinator.resources.requests.cpu=50m
   curl -sf http://trino:8080/v1/info
 )
 if [ "$LOCAL_TEST" != 1 ]; then step "05 deploiement trino" deploy_trino || return 1; fi
