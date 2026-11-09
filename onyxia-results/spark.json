@@ -1,0 +1,130 @@
+[
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"SHOW NAMESPACES IN polaris\")",
+  "output": "  namespace\n0      gold\n1    silver",
+  "error": false,
+  "seconds": 4.53
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"SHOW TABLES IN polaris.gold\")",
+  "output": "  namespace                   tableName  isTemporary\n0      gold               user_activity        False\n1      gold                    dim_date        False\n2      gold       orders_by_state_month        False\n3      gold                top_products        False\n4      gold                    dim_user        False\n5      gold                 dim_product        False\n6      gold                 fact_orders        False\n7      gold  orders_by_state_month_part        False\n8      gold                     cohorts        False",
+  "error": false,
+  "seconds": 0.47
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "first = spark.sql(\"SELECT snapshot_id FROM polaris.silver.orders.snapshots ORDER BY committed_at LIMIT 1\").first()[0]\nspark.sql(\"SELECT snapshot_id, operation, committed_at FROM polaris.silver.orders.snapshots ORDER BY committed_at\")",
+  "output": "           snapshot_id  operation            committed_at\n0  8407732450608481646  overwrite 2026-11-09 11:52:46.239\n1  6055894063615653485     append 2026-11-09 12:39:46.174",
+  "error": false,
+  "seconds": 6.0
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "top = spark.sql(\"\"\"\n    SELECT product,\n           count(*)      AS orders,\n           sum(quantity) AS units,\n           rank() OVER (ORDER BY sum(quantity) DESC) AS units_rank\n    FROM polaris.silver.orders VERSION AS OF <premier snapshot>\n    GROUP BY product\"\"\")\ntop.writeTo(\"polaris.gold.top_products_spark\").createOrReplace()",
+  "output": "table polaris.gold.top_products_spark creee",
+  "error": false,
+  "seconds": 6.1
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"SELECT * FROM polaris.gold.top_products_spark ORDER BY units_rank\")",
+  "output": "     product  orders  units  units_rank\n0  croissant     491   1523           1\n1      drink     484   1493           2\n2    brioche     468   1424           3\n3      bread     458   1420           4\n4      donut     462   1390           5\n5     cookie     466   1365           6",
+  "error": false,
+  "seconds": 1.17
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"\n    SELECT count(*) AS lignes_differentes FROM (\n      (SELECT product, orders, units, units_rank FROM polaris.gold.top_products\n       EXCEPT SELECT product, orders, units, units_rank FROM polaris.gold.top_products_spark)\n      UNION ALL\n      (SELECT product, orders, units, units_rank FROM polaris.gold.top_products_spark\n       EXCEPT SELECT product, orders, units, units_rank FROM polaris.gold.top_products))\"\"\")  # Trino contre Spark, memes donnees",
+  "output": "   lignes_differentes\n0                   0",
+  "error": false,
+  "seconds": 2.84
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"\n    SELECT count(*) AS lignes_differentes FROM (\n      (SELECT product, orders, units, units_rank FROM polaris.gold.top_products\n       EXCEPT SELECT product, orders, units, units_rank FROM (agregation de silver.orders actuel))\n      UNION ALL\n      (SELECT product, orders, units, units_rank FROM (agregation de silver.orders actuel)\n       EXCEPT SELECT product, orders, units, units_rank FROM polaris.gold.top_products))\"\"\")  # silver a recu un INSERT depuis",
+  "output": "   lignes_differentes\n0                   2",
+  "error": false,
+  "seconds": 3.17
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"SELECT * FROM (agregation de silver.orders actuel) WHERE product = 'croissant'\"\"\")",
+  "output": "     product  orders  units  units_rank\n0  croissant     492   1526           1",
+  "error": false,
+  "seconds": 1.31
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"DESCRIBE polaris.gold.top_products\")  # table ecrite par Trino, lue par Spark",
+  "output": "     col_name data_type comment\n0     product    string    None\n1      orders    bigint    None\n2       units    bigint    None\n3  units_rank    bigint    None",
+  "error": false,
+  "seconds": 0.13
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"DESCRIBE polaris.gold.top_products_spark\")",
+  "output": "     col_name data_type comment\n0     product    string    None\n1      orders    bigint    None\n2       units    bigint    None\n3  units_rank       int    None",
+  "error": false,
+  "seconds": 0.06
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "spark.sql(\"SELECT snapshot_id, operation FROM polaris.gold.top_products_spark.snapshots\")",
+  "output": "           snapshot_id  operation\n0  8600842142063691396  overwrite",
+  "error": false,
+  "seconds": 0.22
+ },
+ {
+  "section": "H Comparaison Spark (lab 2)",
+  "kind": "python",
+  "code": "print(\"duree de creation de la session Spark :\", t_session, \"s\")",
+  "output": "duree de creation de la session Spark : 6.9 s",
+  "error": false,
+  "seconds": 0.0
+ },
+ {
+  "section": "3.9 Exercice 5 (lab 3)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"\n    SELECT u.state, date_trunc('month', o.ordered_at) AS month,\n           count(*) AS orders, sum(o.quantity) AS units, count(DISTINCT o.user_id) AS buyers\n    FROM polaris.silver.orders o JOIN polaris.silver.users u ON u.user_id = o.user_id\n    GROUP BY 1, 2\"\"\").count()",
+  "output": "51",
+  "error": false,
+  "seconds": 1.88
+ },
+ {
+  "section": "3.9 Exercice 5 (lab 3)",
+  "kind": "python",
+  "code": "spark.sql(\"SELECT count(*) AS lignes, sum(orders) AS commandes FROM polaris.gold.orders_by_state_month\")  # table Trino",
+  "output": "   lignes  commandes\n0      51       2830",
+  "error": false,
+  "seconds": 0.68
+ },
+ {
+  "section": "3.9 Exercice 5 (lab 3)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"SELECT count(*) AS lignes, sum(orders) AS commandes FROM (agregation Spark)\"\"\")",
+  "output": "   lignes  commandes\n0      51       2830",
+  "error": false,
+  "seconds": 1.18
+ },
+ {
+  "section": "3.9 Exercice 5 (lab 3)",
+  "kind": "python",
+  "code": "spark.sql(\"\"\"  -- lignes qui different entre Spark et la table gold de Trino\n  (agregation Spark EXCEPT orders_by_state_month) UNION ALL (orders_by_state_month EXCEPT agregation Spark)\"\"\")",
+  "output": "   lignes_differentes\n0                   0",
+  "error": false,
+  "seconds": 3.96
+ }
+]

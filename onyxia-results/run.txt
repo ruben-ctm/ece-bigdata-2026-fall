@@ -692,3 +692,211 @@ REVISION: 1
 [env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
 [env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
 [env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
+[push] ok
+[push] ok
+[push] ok
+=== [12:40:20] TERMINE
+=== [12:40:20] TERMINE
+=== [12:40:20] TERMINE
+00 sources	OK
+03 deploiement polaris	OK
+04 silver dans polaris	OK
+05 deploiement trino	OK
+06 labs trino 2 et 3	OK
+00 sources	OK
+03 deploiement polaris	OK
+04 silver dans polaris	OK
+05 deploiement trino	OK
+06 labs trino 2 et 3	OK
+00 sources	OK
+03 deploiement polaris	OK
+04 silver dans polaris	OK
+05 deploiement trino	OK
+06 labs trino 2 et 3	OK
+=== [12:40:20] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+=== [12:40:20] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+=== [12:40:20] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+=== [12:51:22] 00 sources
+=== [12:51:22] 00 sources
+=== [12:51:22] 00 sources
+=== [12:51:22] 00 sources
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+--- 01 donnees bronze ignoree (reprise a 07)
+--- 01 donnees bronze ignoree (reprise a 07)
+--- 01 donnees bronze ignoree (reprise a 07)
+--- 01 donnees bronze ignoree (reprise a 07)
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+--- 02 silver spark ignoree (reprise a 07)
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+--- 02 silver spark ignoree (reprise a 07)
+--- 02 silver spark ignoree (reprise a 07)
+--- 02 silver spark ignoree (reprise a 07)
+--- 03 deploiement polaris ignoree (reprise a 07)
+--- 03 deploiement polaris ignoree (reprise a 07)
+--- 03 deploiement polaris ignoree (reprise a 07)
+--- 03 deploiement polaris ignoree (reprise a 07)
+--- 04 silver dans polaris ignoree (reprise a 07)
+--- 04 silver dans polaris ignoree (reprise a 07)
+--- 04 silver dans polaris ignoree (reprise a 07)
+--- 04 silver dans polaris ignoree (reprise a 07)
+--- 05 deploiement trino ignoree (reprise a 07)
+--- 05 deploiement trino ignoree (reprise a 07)
+--- 05 deploiement trino ignoree (reprise a 07)
+--- 05 deploiement trino ignoree (reprise a 07)
+--- 06 labs trino 2 et 3 ignoree (reprise a 07)
+--- 06 labs trino 2 et 3 ignoree (reprise a 07)
+--- 06 labs trino 2 et 3 ignoree (reprise a 07)
+--- 06 labs trino 2 et 3 ignoree (reprise a 07)
+=== [12:51:28] 07 comparaison spark
+=== [12:51:28] 07 comparaison spark
+=== [12:51:28] 07 comparaison spark
+=== [12:51:28] 07 comparaison spark
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: Using incubator modules: jdk.incubator.vector
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b;1.0
+	confs: [default]
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b;1.0
+	confs: [default]
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b;1.0
+	confs: [default]
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b;1.0
+	confs: [default]
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+:: resolution report :: resolve 296ms :: artifacts dl 6ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+:: resolution report :: resolve 296ms :: artifacts dl 6ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+:: resolution report :: resolve 296ms :: artifacts dl 6ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|                  |            modules            ||   artifacts   |
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+:: resolution report :: resolve 296ms :: artifacts dl 6ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	---------------------------------------------------------------------
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b
+:: retrieving :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b
+:: retrieving :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b
+	confs: [default]
+	confs: [default]
+	confs: [default]
+:: retrieving :: org.apache.spark#spark-submit-parent-7da32149-dbb6-4b80-9f88-732a741c5d2b
+	confs: [default]
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+[H Comparaison Spark (lab 2)] ok 4.53s: spark.sql("SHOW NAMESPACES IN polaris")
+[H Comparaison Spark (lab 2)] ok 4.53s: spark.sql("SHOW NAMESPACES IN polaris")
+[H Comparaison Spark (lab 2)] ok 4.53s: spark.sql("SHOW NAMESPACES IN polaris")
+[H Comparaison Spark (lab 2)] ok 4.53s: spark.sql("SHOW NAMESPACES IN polaris")
+[H Comparaison Spark (lab 2)] ok 0.47s: spark.sql("SHOW TABLES IN polaris.gold")
+[H Comparaison Spark (lab 2)] ok 0.47s: spark.sql("SHOW TABLES IN polaris.gold")
+[H Comparaison Spark (lab 2)] ok 0.47s: spark.sql("SHOW TABLES IN polaris.gold")
+[H Comparaison Spark (lab 2)] ok 0.47s: spark.sql("SHOW TABLES IN polaris.gold")
+[H Comparaison Spark (lab 2)] ok 6.0s: first = spark.sql("SELECT snapshot_id FROM polaris.silver.orders.snaps
+[H Comparaison Spark (lab 2)] ok 6.0s: first = spark.sql("SELECT snapshot_id FROM polaris.silver.orders.snaps
+[H Comparaison Spark (lab 2)] ok 6.0s: first = spark.sql("SELECT snapshot_id FROM polaris.silver.orders.snaps
+[H Comparaison Spark (lab 2)] ok 6.0s: first = spark.sql("SELECT snapshot_id FROM polaris.silver.orders.snaps
+[H Comparaison Spark (lab 2)] ok 6.1s: top = spark.sql("""
+[H Comparaison Spark (lab 2)] ok 6.1s: top = spark.sql("""
+[H Comparaison Spark (lab 2)] ok 6.1s: top = spark.sql("""
+[H Comparaison Spark (lab 2)] ok 6.1s: top = spark.sql("""
+[H Comparaison Spark (lab 2)] ok 1.17s: spark.sql("SELECT * FROM polaris.gold.top_products_spark ORDER BY unit
+[H Comparaison Spark (lab 2)] ok 1.17s: spark.sql("SELECT * FROM polaris.gold.top_products_spark ORDER BY unit
+[H Comparaison Spark (lab 2)] ok 1.17s: spark.sql("SELECT * FROM polaris.gold.top_products_spark ORDER BY unit
+[H Comparaison Spark (lab 2)] ok 1.17s: spark.sql("SELECT * FROM polaris.gold.top_products_spark ORDER BY unit
+[H Comparaison Spark (lab 2)] ok 2.84s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 2.84s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 2.84s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 2.84s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 3.17s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 3.17s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 3.17s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 3.17s: spark.sql("""
+[H Comparaison Spark (lab 2)] ok 1.31s: spark.sql("""SELECT * FROM (agregation de silver.orders actuel) WHERE 
+[H Comparaison Spark (lab 2)] ok 1.31s: spark.sql("""SELECT * FROM (agregation de silver.orders actuel) WHERE 
+[H Comparaison Spark (lab 2)] ok 1.31s: spark.sql("""SELECT * FROM (agregation de silver.orders actuel) WHERE 
+[H Comparaison Spark (lab 2)] ok 1.31s: spark.sql("""SELECT * FROM (agregation de silver.orders actuel) WHERE 
+[H Comparaison Spark (lab 2)] ok 0.13s: spark.sql("DESCRIBE polaris.gold.top_products")  # table ecrite par Tr
+[H Comparaison Spark (lab 2)] ok 0.13s: spark.sql("DESCRIBE polaris.gold.top_products")  # table ecrite par Tr
+[H Comparaison Spark (lab 2)] ok 0.13s: spark.sql("DESCRIBE polaris.gold.top_products")  # table ecrite par Tr
+[H Comparaison Spark (lab 2)] ok 0.13s: spark.sql("DESCRIBE polaris.gold.top_products")  # table ecrite par Tr
+[H Comparaison Spark (lab 2)] ok 0.06s: spark.sql("DESCRIBE polaris.gold.top_products_spark")
+[H Comparaison Spark (lab 2)] ok 0.06s: spark.sql("DESCRIBE polaris.gold.top_products_spark")
+[H Comparaison Spark (lab 2)] ok 0.06s: spark.sql("DESCRIBE polaris.gold.top_products_spark")
+[H Comparaison Spark (lab 2)] ok 0.06s: spark.sql("DESCRIBE polaris.gold.top_products_spark")
+[H Comparaison Spark (lab 2)] ok 0.22s: spark.sql("SELECT snapshot_id, operation FROM polaris.gold.top_product
+[H Comparaison Spark (lab 2)] ok 0.0s: print("duree de creation de la session Spark :", t_session, "s")
+[H Comparaison Spark (lab 2)] ok 0.22s: spark.sql("SELECT snapshot_id, operation FROM polaris.gold.top_product
+[H Comparaison Spark (lab 2)] ok 0.0s: print("duree de creation de la session Spark :", t_session, "s")
+[H Comparaison Spark (lab 2)] ok 0.22s: spark.sql("SELECT snapshot_id, operation FROM polaris.gold.top_product
+[H Comparaison Spark (lab 2)] ok 0.0s: print("duree de creation de la session Spark :", t_session, "s")
+[H Comparaison Spark (lab 2)] ok 0.22s: spark.sql("SELECT snapshot_id, operation FROM polaris.gold.top_product
+[H Comparaison Spark (lab 2)] ok 0.0s: print("duree de creation de la session Spark :", t_session, "s")
+[3.9 Exercice 5 (lab 3)] ok 1.88s: spark.sql("""
+[3.9 Exercice 5 (lab 3)] ok 1.88s: spark.sql("""
+[3.9 Exercice 5 (lab 3)] ok 1.88s: spark.sql("""
+[3.9 Exercice 5 (lab 3)] ok 1.88s: spark.sql("""
+[3.9 Exercice 5 (lab 3)] ok 0.68s: spark.sql("SELECT count(*) AS lignes, sum(orders) AS commandes FROM po
+[3.9 Exercice 5 (lab 3)] ok 0.68s: spark.sql("SELECT count(*) AS lignes, sum(orders) AS commandes FROM po
+[3.9 Exercice 5 (lab 3)] ok 0.68s: spark.sql("SELECT count(*) AS lignes, sum(orders) AS commandes FROM po
+[3.9 Exercice 5 (lab 3)] ok 0.68s: spark.sql("SELECT count(*) AS lignes, sum(orders) AS commandes FROM po
+[3.9 Exercice 5 (lab 3)] ok 1.18s: spark.sql("""SELECT count(*) AS lignes, sum(orders) AS commandes FROM 
+[3.9 Exercice 5 (lab 3)] ok 1.18s: spark.sql("""SELECT count(*) AS lignes, sum(orders) AS commandes FROM 
+[3.9 Exercice 5 (lab 3)] ok 1.18s: spark.sql("""SELECT count(*) AS lignes, sum(orders) AS commandes FROM 
+[3.9 Exercice 5 (lab 3)] ok 1.18s: spark.sql("""SELECT count(*) AS lignes, sum(orders) AS commandes FROM 
+[3.9 Exercice 5 (lab 3)] ok 3.96s: spark.sql("""  -- lignes qui different entre Spark et la table gold de
+[3.9 Exercice 5 (lab 3)] ok 3.96s: spark.sql("""  -- lignes qui different entre Spark et la table gold de
+[3.9 Exercice 5 (lab 3)] ok 3.96s: spark.sql("""  -- lignes qui different entre Spark et la table gold de
+[3.9 Exercice 5 (lab 3)] ok 3.96s: spark.sql("""  -- lignes qui different entre Spark et la table gold de
