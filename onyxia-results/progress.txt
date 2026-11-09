@@ -57,3 +57,16 @@ vscode-pyspark-430512-0              1/1     Running     0          38m
 2m29s       Normal    ScalingReplicaSet                 deployment/trino-coordinator                      Scaled up replica set trino-coordinator-788685fb59 from 0 to 1
 2m29s       Normal    SuccessfulCreate                  replicaset/trino-coordinator-788685fb59           Created pod: trino-coordinator-788685fb59-2zflb
 86s         Warning   FailedScheduling                  pod/trino-coordinator-788685fb59-2zflb            0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+--- progress 12:32:53
+NAME                                 READY   STATUS      RESTARTS   AGE
+polaris-5b5d597f8b-qd6x9             1/1     Running     0          17m
+polaris-bootstrap-6m2dz              0/1     Completed   0          11m
+polaris-postgresql-0                 1/1     Running     0          17m
+trino-coordinator-788685fb59-2zflb   0/1     Pending     0          5m1s
+vscode-pyspark-430512-0              1/1     Running     0          41m
+6m26s       Normal    Started                           pod/polaris-bootstrap-6m2dz                       Container started
+5m55s       Normal    Completed                         job/polaris-bootstrap                             Job completed
+5m1s        Normal    SuccessfulCreate                  replicaset/trino-coordinator-788685fb59           Created pod: trino-coordinator-788685fb59-2zflb
+5m1s        Normal    ScalingReplicaSet                 deployment/trino-coordinator                      Scaled up replica set trino-coordinator-788685fb59 from 0 to 1
+52s         Warning   FailedScheduling                  pod/trino-coordinator-788685fb59-2zflb            0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+28s         Warning   FailedScheduling                  pod/trino-coordinator-788685fb59-2zflb            0/9 nodes are available: 3 Insufficient cpu, 6 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 3 No preemption victims found for incoming pod, 6 Preemption is not helpful for scheduling.
