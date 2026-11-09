@@ -164,3 +164,39 @@ persistentvolumeclaim "data-polaris-postgresql-0" deleted from user-r-combe-tama
 Release "polaris" does not exist. Installing it now.
 Release "polaris" does not exist. Installing it now.
 Release "polaris" does not exist. Installing it now.
+NAME: polaris
+LAST DEPLOYED: Mon Nov  9 12:15:15 2026
+NAMESPACE: user-r-combe-tamain-ece
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NAME: polaris
+LAST DEPLOYED: Mon Nov  9 12:15:15 2026
+NAMESPACE: user-r-combe-tamain-ece
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NAME: polaris
+LAST DEPLOYED: Mon Nov  9 12:15:15 2026
+NAMESPACE: user-r-combe-tamain-ece
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+{
+    "status": "UP",
+    "checks": [
+        {
+            "name": "MongoDB connection health check",
+{
+    "status": "UP",
+    "checks": [
+        {
+            "name": "MongoDB connection health check",
+{
+    "status": "UP",
+    "checks": [
+        {
+            "name": "MongoDB connection health check",
+job.batch/polaris-bootstrap condition met
+job.batch/polaris-bootstrap condition met
+job.batch/polaris-bootstrap condition met
