@@ -1,0 +1,254 @@
+[
+ {
+  "section": "2.0 Connexion",
+  "kind": "python",
+  "code": "import os\nimport pandas as pd\nimport trino\n\nCATALOG = \"lakehouse\"\n\nconn = trino.dbapi.connect(\n    host=os.environ[\"TRINO_HOST\"],\n    port=int(os.environ[\"TRINO_PORT\"]),\n    user=os.environ[\"TRINO_USER\"],\n    http_scheme=\"http\",\n    catalog=CATALOG,\n)\n\ndef sql(statement):\n    cur = conn.cursor()\n    cur.execute(statement)\n    rows = cur.fetchall()\n    columns = [c[0] for c in cur.description] if cur.description else []\n    return pd.DataFrame(rows, columns=columns)",
+  "output": "",
+  "error": false
+ },
+ {
+  "section": "2.0 Connexion",
+  "kind": "python",
+  "code": "sql(\"SELECT version()\")",
+  "output": "  _col0\n0   480",
+  "error": false
+ },
+ {
+  "section": "2.1 Catalogues",
+  "kind": "python",
+  "code": "sql(\"SHOW CATALOGS\")",
+  "output": "     Catalog\n0  lakehouse\n1     system\n2      tpcds\n3       tpch",
+  "error": false
+ },
+ {
+  "section": "2.1 Catalogues",
+  "kind": "python",
+  "code": "sql(\"SHOW SCHEMAS FROM lakehouse\")",
+  "output": "               Schema\n0  information_schema\n1              silver\n2              system",
+  "error": false
+ },
+ {
+  "section": "2.1 Catalogues",
+  "kind": "python",
+  "code": "sql(\"SHOW TABLES FROM lakehouse.silver\")",
+  "output": "    Table\n0  orders\n1   users",
+  "error": false
+ },
+ {
+  "section": "2.1 Catalogues",
+  "kind": "python",
+  "code": "sql(\"DESCRIBE lakehouse.silver.orders\")",
+  "output": "       Column                         Type Extra Comment\n0    order_id                      varchar              \n1     user_id                      varchar              \n2  ordered_at  timestamp(6) with time zone              \n3    quantity                      integer              \n4     product                      varchar              ",
+  "error": false
+ },
+ {
+  "section": "2.1 Catalogues",
+  "kind": "python",
+  "code": "sql(\"DESCRIBE lakehouse.silver.users\")",
+  "output": "      Column     Type Extra Comment\n0    user_id  varchar              \n1   username  varchar              \n2       name  varchar              \n3        sex  varchar              \n4      email  varchar              \n5  birthdate     date              \n6     street  varchar              \n7       city  varchar              \n8      state  varchar              \n9   zip_code  varchar              ",
+  "error": false
+ },
+ {
+  "section": "2.2 Silver",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS orders FROM lakehouse.silver.orders\")",
+  "output": "   orders\n0    2829",
+  "error": false
+ },
+ {
+  "section": "2.2 Silver",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS users FROM lakehouse.silver.users\")",
+  "output": "   users\n0     50",
+  "error": false
+ },
+ {
+  "section": "2.2 Silver",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT state,\n           count(*) AS users,\n           count_if(city IS NULL) AS missing_city\n    FROM lakehouse.silver.users\n    GROUP BY state\n    ORDER BY users DESC\n    LIMIT 10\n\"\"\")",
+  "output": "  state  users  missing_city\n0    FM      3             0\n1    AE      3             3\n2    VI      2             0\n3    AP      2             2\n4    NM      2             0\n5    VT      2             0\n6    TX      2             0\n7    PA      2             0\n8    HI      2             0\n9    NJ      2             0",
+  "error": false
+ },
+ {
+  "section": "2.2 Silver",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT count(*) AS orphan_orders\n    FROM lakehouse.silver.orders AS o\n    LEFT JOIN lakehouse.silver.users AS u ON u.user_id = o.user_id\n    WHERE u.user_id IS NULL\n\"\"\")",
+  "output": "   orphan_orders\n0              0",
+  "error": false
+ },
+ {
+  "section": "2.3 Metadonnees Iceberg",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT snapshot_id, committed_at, operation\n    FROM lakehouse.silver.\"orders$snapshots\"\n    ORDER BY committed_at\n\"\"\")",
+  "output": "           snapshot_id                  committed_at  operation\n0  8407732450608481646 2026-11-09 11:52:46.239+00:00  overwrite",
+  "error": false
+ },
+ {
+  "section": "2.3 Metadonnees Iceberg",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT file_path, file_format, record_count, file_size_in_bytes\n    FROM lakehouse.silver.\"orders$files\"\n\"\"\")",
+  "output": "                                                                                                                  file_path file_format  record_count  file_size_in_bytes\n0  s3a://user-r-combe-tamain-ece/warehouse/silver/orders/data/00000-19-3fa0d28b-ee3d-464e-80d5-542e0687edc2-0-00001.parquet     PARQUET          2829               84055",
+  "error": false
+ },
+ {
+  "section": "2.3 Metadonnees Iceberg",
+  "kind": "python",
+  "code": "sql('SELECT * FROM lakehouse.silver.\"orders$history\"')",
+  "output": "                made_current_at          snapshot_id parent_id  is_current_ancestor\n0 2026-11-09 11:52:46.239+00:00  8407732450608481646      None                 True",
+  "error": false
+ },
+ {
+  "section": "2.3 Metadonnees Iceberg",
+  "kind": "bash",
+  "code": "aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://user-r-combe-tamain-ece/warehouse/silver/ --recursive | grep -v metadata.json",
+  "output": "2026-11-09 11:52:36          0 warehouse/silver/\n2026-11-09 11:52:46      84055 warehouse/silver/orders/data/00000-19-3fa0d28b-ee3d-464e-80d5-542e0687edc2-0-00001.parquet\n2026-11-09 11:52:46       7354 warehouse/silver/orders/metadata/232697ef-177d-4420-95c4-caf7fcd24ea0-m0.avro\n2026-11-09 11:52:46       4463 warehouse/silver/orders/metadata/snap-8407732450608481646-1-232697ef-177d-4420-95c4-caf7fcd24ea0.avro\n2026-11-09 11:52:46          1 warehouse/silver/orders/metadata/version-hint.text\n2026-11-09 12:27:40       7436 warehouse/silver/users/data/00000-0-66ae2fac-0be0-4ac1-9538-e78e94db3c66-0-00001.parquet\n2026-11-09 11:52:42       7436 warehouse/silver/users/data/00000-15-50aaf58b-759b-40f3-8013-05113456ed8b-0-00001.parquet\n2026-11-09 12:27:41       7740 warehouse/silver/users/metadata/35c3450d-0faf-4f3f-bd00-d081bfaf9528-m0.avro\n2026-11-09 11:52:43       7740 warehouse/silver/users/metadata/4c4833bc-997d-4d6d-a173-591948cef12f-m0.avro\n2026-11-09 11:52:43       4459 warehouse/silver/users/metadata/snap-182065594550048468-1-4c4833bc-997d-4d6d-a173-591948cef12f.avro\n2026-11-09 12:27:41       4453 warehouse/silver/users/metadata/snap-412529163050570925-1-35c3450d-0faf-4f3f-bd00-d081bfaf9528.avro\n2026-11-09 11:52:44          1 warehouse/silver/users/metadata/version-hint.text",
+  "error": false
+ },
+ {
+  "section": "2.4 Plan",
+  "kind": "python",
+  "code": "plan = sql(\"\"\"\n    EXPLAIN (TYPE DISTRIBUTED)\n    SELECT u.state, count(*) AS orders\n    FROM lakehouse.silver.orders AS o\n    JOIN lakehouse.silver.users  AS u ON u.user_id = o.user_id\n    GROUP BY u.state\n\"\"\")\nprint(plan.iloc[0, 0])",
+  "output": "Trino version: 480\nFragment 0 [HASH]\n    Output layout: [state, count]\n    Output partitioning: SINGLE []\n    Output[columnNames = [state, orders]]\n    \u2502   Layout: [state:varchar, count:bigint]\n    \u2502   Estimates: {rows: ? (?), cpu: 0, memory: 0B, network: 0B}\n    \u2502   orders := count\n    \u2514\u2500 Aggregate[type = FINAL, keys = [state]]\n       \u2502   Layout: [state:varchar, count:bigint]\n       \u2502   Estimates: {rows: ? (?), cpu: ?, memory: ?, network: 0B}\n       \u2502   count := count(count_4)\n       \u2514\u2500 LocalExchange[partitioning = HASH, arguments = [state::varchar]]\n          \u2502   Layout: [state:varchar, count_4:bigint]\n          \u2502   Estimates: {rows: ? (?), cpu: ?, memory: 0B, network: 0B}\n          \u2514\u2500 RemoteSource[sourceFragmentIds = [1]]\n                 Layout: [state:varchar, count_4:bigint]\n\nFragment 1 [SOURCE]\n    Output layout: [state, count_4]\n    Output partitioning: HASH [state]\n    Aggregate[type = PARTIAL, keys = [state]]\n    \u2502   Layout: [state:varchar, count_4:bigint]\n    \u2502   count_4 := count(*)\n    \u2514\u2500 InnerJoin[criteria = (user_id = user_id_0), distribution = REPLICATED]\n       \u2502   Layout: [state:varchar]\n       \u2502   Estimates: {rows: ? (?), cpu: ?, memory: 4.02kB, network: 0B}\n       \u2502   Distribution: REPLICATED\n       \u2502   dynamicFilterAssignments = {user_id_0 -> #df_314}\n       \u251c\u2500 ScanFilter[table = lakehouse:silver.orders$data@8407732450608481646, dynamicFilters = {user_id = #df_314}]\n       \u2502      Layout: [user_id:varchar]\n       \u2502      Estimates: {rows: 2829 (22.36kB), cpu: 22.36k, memory: 0B, network: 0B}/{rows: 2829 (22.36kB), cpu: 22.36k, memory: 0B, network: 0B}\n       \u2502      user_id := 2:user_id:varchar\n       \u2514\u2500 LocalExchange[partitioning = SINGLE]\n          \u2502   Layout: [user_id_0:varchar, state:varchar]\n          \u2502   Estimates: {rows: 50 (4.02kB), cpu: 0, memory: 0B, network: 0B}\n          \u2514\u2500 RemoteSource[sourceFragmentIds = [2]]\n                 Layout: [user_id_0:varchar, state:varchar]\n\nFragment 2 [SOURCE]\n    Output layout: [user_id_0, state]\n    Output partitioning: BROADCAST []\n    TableScan[table = lakehouse:silver.users$data@412529163050570925]\n        Layout: [user_id_0:varchar, state:varchar]\n        Estimates: {rows: 50 (4.02kB), cpu: 4.02k, memory: 0B, network: 0B}\n        state := 9:state:varchar\n        user_id_0 := 1:user_id:varchar",
+  "error": false
+ },
+ {
+  "section": "2.4 Plan",
+  "kind": "python",
+  "code": "stats = sql(\"\"\"\n    EXPLAIN ANALYZE\n    SELECT u.state, count(*) AS orders\n    FROM lakehouse.silver.orders AS o\n    JOIN lakehouse.silver.users  AS u ON u.user_id = o.user_id\n    GROUP BY u.state\n\"\"\")\nprint(stats.iloc[0, 0])",
+  "output": "Trino version: 480\nQueued: 673.87us, Analysis: 739.49ms, Planning: 398.99ms, Execution: 2.77s, Finishing: 0.00ns\nFragment 1 [HASH]\n    CPU: 6.71ms, Scheduled: 6.94ms, Blocked 7.61s (Input: 3.80s, Output: 0.00ns), Input: 37 rows (592B); per task: avg.: 37.00 std.dev.: 0.00, Output: 37 rows (592B)\n    Peak Memory: 840B, Tasks count: 1; per task: max: 840B\n    Output layout: [state, count]\n    Output partitioning: SINGLE []\n    Aggregate[type = FINAL, keys = [state]]\n    \u2502   Layout: [state:varchar, count:bigint]\n    \u2502   Estimates: {rows: ? (?), cpu: ?, memory: ?, network: 0B}\n    \u2502   CPU: 4.00ms (2.04%), Scheduled: 4.00ms (0.61%), Blocked: 0.00ns (0.00%), Output: 37 rows (592B)\n    \u2502   Input avg.: 18.50 rows, Input std.dev.: 2.70%\n    \u2502   count := count(count_4)\n    \u2514\u2500 LocalExchange[partitioning = HASH, arguments = [state::varchar]]\n       \u2502   Layout: [state:varchar, count_4:bigint]\n       \u2502   Estimates: {rows: ? (?), cpu: ?, memory: 0B, network: 0B}\n       \u2502   CPU: 1.00ms (0.51%), Scheduled: 1.00ms (0.15%), Blocked: 3.80s (39.59%), Output: 37 rows (592B)\n       \u2502   Input avg.: 18.50 rows, Input std.dev.: 100.00%\n       \u2514\u2500 RemoteSource[sourceFragmentIds = [2]]\n              Layout: [state:varchar, count_4:bigint]\n              CPU: 1.00ms (0.51%), Scheduled: 1.00ms (0.15%), Blocked: 3.80s (39.59%), Output: 37 rows (592B)\n              Input avg.: 18.50 rows, Input std.dev.: 100.00%\n\nFragment 2 [SOURCE]\n    CPU: 177.04ms, Scheduled: 547.95ms, Blocked 2.00s (Input: 587.92ms, Output: 0.00ns), Input: 2879 rows (126.66kB); per task: avg.: 2879.00 std.dev.: 0.00, Output: 37 rows (592B)\n    Peak Memory: 128kB, Tasks count: 1; per task: max: 128kB\n    Output layout: [state, count_4]\n    Output partitioning: HASH [state]\n    Aggregate[type = PARTIAL, keys = [state]]\n    \u2502   Layout: [state:varchar, count_4:bigint]\n    \u2502   CPU: 29.00ms (14.80%), Scheduled: 30.00ms (4.60%), Blocked: 0.00ns (0.00%), Output: 37 rows (592B)\n    \u2502   Input avg.: 2829.00 rows, Input std.dev.: 0.00%\n    \u2502   count_4 := count(*)\n    \u2514\u2500 InnerJoin[criteria = (user_id = user_id_0), distribution = REPLICATED]\n       \u2502   Layout: [state:varchar]\n       \u2502   Estimates: {rows: ? (?), cpu: ?, memory: 4.02kB, network: 0B}\n       \u2502   CPU: 66.00ms (33.67%), Scheduled: 207.00ms (31.75%), Blocked: 1.21s (12.61%), Output: 2829 rows (19.34kB)\n       \u2502   Left (probe) Input avg.: 2829.00 rows, Input std.dev.: 0.00%\n       \u2502   Right (build) Input avg.: 50.00 rows, Input std.dev.: 0.00%\n       \u2502   Distribution: REPLICATED\n       \u2502   dynamicFilterAssignments = {user_id_0 -> #df_373}\n       \u251c\u2500 ScanFilter[table = lakehouse:silver.orders$data@8407732450608481646, dynamicFilters = {user_id = #df_373}]\n       \u2502      Layout: [user_id:varchar]\n       \u2502      Estimates: {rows: 2829 (22.36kB), cpu: 22.36k, memory: 0B, network: 0B}/{rows: 2829 (22.36kB), cpu: 22.36k, memory: 0B, network: 0B}\n       \u2502      CPU: 75.00ms (38.27%), Scheduled: 303.00ms (46.47%), Blocked: 0.00ns (0.00%), Output: 2829 rows (123.33kB)\n       \u2502      Input avg.: 2829.00 rows, Input std.dev.: 0.00%\n       \u2502      user_id := 2:user_id:varchar\n       \u2502      Input: 2829 rows (124.32kB), Filtered: 0.00%, Physical input: 82.08kB, Physical input time: 56.50us, Splits: 1, Splits generation wait time: 847.11ms\n       \u2502      Dynamic filters: \n       \u2502          - df_373, [ SortedRangeSet[type=varchar, ranges=50, {[09a0a0f6-73b0-4091-b634-c1694f76e388], ..., [f94d6204-6808-493f-9fed-2c43e256a6dc]}] ], collection time=873.12ms\n       \u2514\u2500 LocalExchange[partitioning = SINGLE]\n          \u2502   Layout: [user_id_0:varchar, state:varchar]\n          \u2502   Estimates: {rows: 50 (4.02kB), cpu: 0, memory: 0B, network: 0B}\n          \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 200.00ms (2.08%), Output: 50 rows (2.34kB)\n          \u2502   Input avg.: 25.00 rows, Input std.dev.: 12.00%\n          \u2514\u2500 RemoteSource[sourceFragmentIds = [3]]\n                 Layout: [user_id_0:varchar, state:varchar]\n                 CPU: 3.00ms (1.53%), Scheduled: 3.00ms (0.46%), Blocked: 588.00ms (6.13%), Output: 50 rows (2.34kB)\n                 Input avg.: 25.00 rows, Input std.dev.: 12.00%\n\nFragment 3 [SOURCE]\n    CPU: 17.05ms, Scheduled: 102.87ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 50 rows (2.54kB); per task: avg.: 50.00 std.dev.: 0.00, Output: 50 rows (2.54kB)\n    Peak Memory: 3.62kB, Tasks count: 1; per task: max: 3.62kB\n    Output layout: [user_id_0, state]\n    Output partitioning: BROADCAST []\n    TableScan[table = lakehouse:silver.users$data@412529163050570925]\n        Layout: [user_id_0:varchar, state:varchar]\n        Estimates: {rows: 50 (4.02kB), cpu: 4.02k, memory: 0B, network: 0B}\n        CPU: 17.00ms (8.67%), Scheduled: 103.00ms (15.80%), Blocked: 0.00ns (0.00%), Output: 50 rows (2.54kB)\n        Input avg.: 50.00 rows, Input std.dev.: 0.00%\n        state := 9:state:varchar\n        user_id_0 := 1:user_id:varchar\n        Input: 50 rows (2.54kB), Physical input: 7.26kB, Physical input time: 13.78us, Splits: 1, Splits generation wait time: 183.04ms",
+  "error": false
+ },
+ {
+  "section": "2.4 Plan",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT query_id, state, date_diff('millisecond', created, coalesce(\"end\", current_timestamp)) AS elapsed_ms, query\n    FROM system.runtime.queries\n    ORDER BY created DESC\n    LIMIT 5\n\"\"\")",
+  "output": "                      query_id     state  elapsed_ms                                                                                                                                                                                                    query\n0  20261109_123810_00015_ff7zw   RUNNING         -32      \\n    SELECT query_id, state, date_diff('millisecond', created, coalesce(\"end\", current_timestamp)) AS elapsed_ms, query\\n    FROM system.runtime.queries\\n    ORDER BY created DESC\\n    LIMIT 5\\n\n1  20261109_123806_00014_ff7zw  FINISHED        3721             \\n    EXPLAIN ANALYZE\\n    SELECT u.state, count(*) AS orders\\n    FROM lakehouse.silver.orders AS o\\n    JOIN lakehouse.silver.users  AS u ON u.user_id = o.user_id\\n    GROUP BY u.state\\n\n2  20261109_123804_00013_ff7zw  FINISHED        1682  \\n    EXPLAIN (TYPE DISTRIBUTED)\\n    SELECT u.state, count(*) AS orders\\n    FROM lakehouse.silver.orders AS o\\n    JOIN lakehouse.silver.users  AS u ON u.user_id = o.user_id\\n    GROUP BY u.state\\n\n3  20261109_123802_00012_ff7zw  FINISHED         588                                                                                                                                                          SELECT * FROM lakehouse.silver.\"orders$history\"\n4  20261109_123801_00011_ff7zw  FINISHED        1171                                                                                        \\n    SELECT file_path, file_format, record_count, file_size_in_bytes\\n    FROM lakehouse.silver.\"orders$files\"\\n",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"CREATE SCHEMA IF NOT EXISTS lakehouse.gold\")",
+  "output": "Empty DataFrame\nColumns: []\nIndex: []",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"SHOW SCHEMAS FROM lakehouse\")",
+  "output": "               Schema\n0                gold\n1  information_schema\n2              silver\n3              system",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.orders_by_state_month AS\n    SELECT\n        u.state,\n        date_trunc('month', o.ordered_at) AS month,\n        count(*)                          AS orders,\n        sum(o.quantity)                   AS units,\n        count(DISTINCT o.user_id)         AS buyers\n    FROM lakehouse.silver.orders AS o\n    JOIN lakehouse.silver.users  AS u ON u.user_id = o.user_id\n    GROUP BY 1, 2\n\"\"\")",
+  "output": "   rows\n0    50",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.orders_by_state_month ORDER BY month, state LIMIT 10\")",
+  "output": "  state                     month  orders  units  buyers\n0    AL 2020-01-01 00:00:00+00:00      65    199       1\n1    AP 2020-01-01 00:00:00+00:00      17     49       1\n2    AS 2020-01-01 00:00:00+00:00      12     40       1\n3    CO 2020-01-01 00:00:00+00:00      17     43       1\n4    FM 2020-01-01 00:00:00+00:00      66    200       1\n5    GA 2020-01-01 00:00:00+00:00       4     12       1\n6    IN 2020-01-01 00:00:00+00:00      49    175       1\n7    KY 2020-01-01 00:00:00+00:00      83    256       1\n8    MH 2020-01-01 00:00:00+00:00      21     57       1\n9    NE 2020-01-01 00:00:00+00:00      11     30       1",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.top_products AS\n    SELECT\n        product,\n        count(*)      AS orders,\n        sum(quantity) AS units,\n        rank() OVER (ORDER BY sum(quantity) DESC) AS units_rank\n    FROM lakehouse.silver.orders\n    GROUP BY product\n\"\"\")",
+  "output": "   rows\n0     6",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.top_products ORDER BY units_rank LIMIT 10\")",
+  "output": "     product  orders  units  units_rank\n0  croissant     491   1523           1\n1      drink     484   1493           2\n2    brioche     468   1424           3\n3      bread     458   1420           4\n4      donut     462   1390           5\n5     cookie     466   1365           6",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.user_activity AS\n    SELECT\n        u.user_id,\n        u.state,\n        date_diff('year', u.birthdate, current_date) AS age,\n        count(o.order_id)        AS orders,\n        coalesce(sum(o.quantity), 0) AS units,\n        min(o.ordered_at)        AS first_order_at,\n        max(o.ordered_at)        AS last_order_at\n    FROM lakehouse.silver.users AS u\n    LEFT JOIN lakehouse.silver.orders AS o ON o.user_id = u.user_id\n    GROUP BY u.user_id, u.state, u.birthdate\n\"\"\")",
+  "output": "   rows\n0    50",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.user_activity ORDER BY orders DESC LIMIT 10\")",
+  "output": "                                user_id state  age  orders  units                   first_order_at                    last_order_at\n0  9793b9b4-1374-4146-b2c5-bd89b70b3420    HI   65     100    289 2020-02-06 22:28:23.377915+00:00 2020-02-11 01:57:32.773432+00:00\n1  2051acef-097a-4e10-b6fe-bc0e7ecddbaf    VI    9     100    301 2020-03-13 06:21:16.892555+00:00 2020-03-17 09:02:08.476647+00:00\n2  8d605936-0380-4b70-8d03-c91e4f8d5238    WA   76      99    280 2020-03-06 12:42:24.432345+00:00 2020-03-10 14:46:03.127489+00:00\n3  52828d80-44b5-41f7-97ac-6aa8bb2488a3    IA   35      97    303 2020-02-11 02:16:02.488268+00:00 2020-02-15 02:18:44.854831+00:00\n4  72bb912d-7da6-4785-b63b-4dc3a559e463    NJ   74      97    317 2020-02-15 03:39:36.282921+00:00 2020-02-19 03:23:18.610446+00:00\n5  97fa7f04-8363-4007-9cae-9610c72c1fe3    AP   52      92    285 2020-03-27 11:09:51.257559+00:00 2020-03-31 06:01:03.068375+00:00\n6  0dde29a6-baa4-471a-9d24-67ac778eedb3    VI   85      92    285 2020-01-08 11:20:45.094193+00:00 2020-01-12 06:23:02.514874+00:00\n7  90164161-cfa7-41cd-a631-d00b26d794d3    CA   82      91    270 2020-02-22 14:30:47.467747+00:00 2020-02-26 08:13:22.890319+00:00\n8  832920b7-c143-4426-b72f-871a45ee432d    HI   51      91    272 2020-04-08 18:29:41.913897+00:00 2020-04-12 12:41:22.197741+00:00\n9  d045dd1c-6684-49e3-b1f8-343ea99f1318    UT   33      86    256 2020-03-02 22:15:57.890701+00:00 2020-03-06 11:03:10.312652+00:00",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"SHOW TABLES FROM lakehouse.gold\")",
+  "output": "                   Table\n0  orders_by_state_month\n1           top_products\n2          user_activity",
+  "error": false
+ },
+ {
+  "section": "2.5 Gold",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT file_path, record_count, file_size_in_bytes\n    FROM lakehouse.gold.\"top_products$files\"\n\"\"\")",
+  "output": "                                                                                                                                                                 file_path  record_count  file_size_in_bytes\n0  s3://user-r-combe-tamain-ece/warehouse/gold/top_products-a919644568fd44a2b9a51a41e5121fad/data/20261109_123825_00020_ff7zw-88282628-12cc-4a8e-b06e-127d4a2f5957.parquet             6                 760",
+  "error": false
+ },
+ {
+  "section": "2.6 Validation",
+  "kind": "python",
+  "code": "silver_units = sql(\"SELECT sum(quantity) AS v FROM lakehouse.silver.orders\").iloc[0, 0]\ngold_units = sql(\"SELECT sum(units) AS v FROM lakehouse.gold.orders_by_state_month\").iloc[0, 0]\nproduct_units = sql(\"SELECT sum(units) AS v FROM lakehouse.gold.top_products\").iloc[0, 0]\nassert silver_units == gold_units\nassert silver_units == product_units\nprint(silver_units, gold_units, product_units)",
+  "output": "8615 8615 8615",
+  "error": false
+ },
+ {
+  "section": "2.6 Validation",
+  "kind": "python",
+  "code": "silver_users = sql(\"SELECT count(*) AS v FROM lakehouse.silver.users\").iloc[0, 0]\ngold_users = sql(\"SELECT count(*) AS v FROM lakehouse.gold.user_activity\").iloc[0, 0]\nsilver_orders = sql(\"SELECT count(*) AS v FROM lakehouse.silver.orders\").iloc[0, 0]\ngold_orders = sql(\"SELECT sum(orders) AS v FROM lakehouse.gold.user_activity\").iloc[0, 0]\nassert silver_users == gold_users\nassert silver_orders == gold_orders\nprint(silver_users, gold_users, silver_orders, gold_orders)",
+  "output": "50 50 2829 2829",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "sql(\"DELETE FROM lakehouse.gold.top_products\")",
+  "output": "   rows\n0     6",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS products FROM lakehouse.gold.top_products\")",
+  "output": "   products\n0         0",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    INSERT INTO lakehouse.gold.top_products\n    SELECT product, count(*), sum(quantity),\n           rank() OVER (ORDER BY sum(quantity) DESC)\n    FROM lakehouse.silver.orders\n    GROUP BY product\n\"\"\")",
+  "output": "   rows\n0     6",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT snapshot_id, committed_at, operation\n    FROM lakehouse.gold.\"top_products$snapshots\"\n    ORDER BY committed_at\n\"\"\")",
+  "output": "           snapshot_id                  committed_at operation\n0  5679923997119223469 2026-11-09 12:38:28.711+00:00    append\n1  7721050443174576655 2026-11-09 12:38:45.105+00:00    delete\n2   433421330162471359 2026-11-09 12:38:48.706+00:00    append",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "first = sql(\"\"\"\n    SELECT snapshot_id\n    FROM lakehouse.gold.\"top_products$snapshots\"\n    ORDER BY committed_at\n    LIMIT 1\n\"\"\").iloc[0, 0]\nsql(f\"SELECT count(*) AS products FROM lakehouse.gold.top_products FOR VERSION AS OF {first}\")",
+  "output": "   products\n0         6",
+  "error": false
+ },
+ {
+  "section": "2.7 Refresh",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS products FROM lakehouse.gold.top_products\")",
+  "output": "   products\n0         6",
+  "error": false
+ }
+]

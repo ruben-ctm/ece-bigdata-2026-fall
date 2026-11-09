@@ -1,0 +1,373 @@
+[
+ {
+  "section": "3.0",
+  "kind": "python",
+  "code": "import os\nimport pandas as pd\nimport trino\nconn = trino.dbapi.connect(host=os.environ[\"TRINO_HOST\"], port=int(os.environ[\"TRINO_PORT\"]),\n    user=os.environ[\"TRINO_USER\"], http_scheme=\"http\", catalog=\"lakehouse\")\ndef sql(statement):\n    cur = conn.cursor()\n    cur.execute(statement)\n    rows = cur.fetchall()\n    columns = [c[0] for c in cur.description] if cur.description else []\n    return pd.DataFrame(rows, columns=columns)",
+  "output": "",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.dim_user AS\n    SELECT\n        row_number() OVER (ORDER BY user_id) AS user_key,\n        user_id, username, name, sex, birthdate, city, state, zip_code\n    FROM lakehouse.silver.users\n\"\"\")",
+  "output": "   rows\n0    50",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.dim_product AS\n    SELECT row_number() OVER (ORDER BY product) AS product_key, product\n    FROM (SELECT DISTINCT product FROM lakehouse.silver.orders)\n\"\"\")",
+  "output": "   rows\n0     6",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "first_day, last_day = sql(\"\"\"\n    SELECT CAST(min(ordered_at) AS date) AS first_day,\n           CAST(max(ordered_at) AS date) AS last_day\n    FROM lakehouse.silver.orders\n\"\"\").iloc[0]\nprint(first_day, last_day)",
+  "output": "2020-01-01 2020-04-27",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(f\"\"\"\n    CREATE TABLE lakehouse.gold.dim_date AS\n    SELECT\n        CAST(date_format(CAST(d AS timestamp), '%Y%m%d') AS integer) AS date_key,\n        d                                       AS full_date,\n        year(d)                                 AS year,\n        quarter(d)                              AS quarter,\n        month(d)                                AS month,\n        date_format(CAST(d AS timestamp), '%M') AS month_name,\n        day_of_week(d)                          AS day_of_week,\n        day_of_week(d) IN (6, 7)                AS is_weekend\n    FROM UNNEST(sequence(DATE '{first_day}', DATE '{last_day}', INTERVAL '1' DAY)) AS t(d)\n\"\"\")",
+  "output": "   rows\n0   118",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.dim_user ORDER BY user_key LIMIT 5\")",
+  "output": "   user_key                               user_id        username              name sex   birthdate           city state zip_code\n0         1  09a0a0f6-73b0-4091-b634-c1694f76e388  gilbertwilliam      Donna Newman   F  1971-08-25    Garciamouth    VT    11554\n1         2  0b2f6d5c-700b-4d5f-b89f-72f32a60c652         karen73     Nathan Montes   M  2019-03-27     Port James    PA    18641\n2         3  0dde29a6-baa4-471a-9d24-67ac778eedb3     wrightjames    Monica Mcbride   F  1941-08-14  Tuckerborough    VI    53066\n3         4  1190f938-a66f-47f7-b966-9fa759970043      howelljohn  Tiffany Gonzalez   F  1956-11-12  Port Loriport    CT    76350\n4         5  12738a23-5aaa-432f-8e63-22b6ab05347f   atkinsbarbara      Andrew Smith   M  1936-07-22  East Ryanfurt    NC    10809",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.dim_product ORDER BY product_key\")",
+  "output": "   product_key    product\n0            1      bread\n1            2    brioche\n2            3     cookie\n3            4  croissant\n4            5      donut\n5            6      drink",
+  "error": false
+ },
+ {
+  "section": "3.1 Dimensions",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.dim_date ORDER BY date_key LIMIT 8\")",
+  "output": "   date_key   full_date  year  quarter  month month_name  day_of_week  is_weekend\n0  20200101  2020-01-01  2020        1      1    January            3       False\n1  20200102  2020-01-02  2020        1      1    January            4       False\n2  20200103  2020-01-03  2020        1      1    January            5       False\n3  20200104  2020-01-04  2020        1      1    January            6        True\n4  20200105  2020-01-05  2020        1      1    January            7        True\n5  20200106  2020-01-06  2020        1      1    January            1       False\n6  20200107  2020-01-07  2020        1      1    January            2       False\n7  20200108  2020-01-08  2020        1      1    January            3       False",
+  "error": false
+ },
+ {
+  "section": "3.2 Fait",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.fact_orders AS\n    SELECT\n        o.order_id,\n        u.user_key,\n        p.product_key,\n        CAST(date_format(o.ordered_at, '%Y%m%d') AS integer) AS date_key,\n        o.ordered_at,\n        o.quantity\n    FROM lakehouse.silver.orders AS o\n    LEFT JOIN lakehouse.gold.dim_user    AS u ON u.user_id = o.user_id\n    LEFT JOIN lakehouse.gold.dim_product AS p ON p.product = o.product\n\"\"\")",
+  "output": "   rows\n0  2829",
+  "error": false
+ },
+ {
+  "section": "3.2 Fait",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT 'dim_user' AS table_name, count(*) AS row_count FROM lakehouse.gold.dim_user\n    UNION ALL SELECT 'dim_product', count(*) FROM lakehouse.gold.dim_product\n    UNION ALL SELECT 'dim_date', count(*) FROM lakehouse.gold.dim_date\n    UNION ALL SELECT 'fact_orders', count(*) FROM lakehouse.gold.fact_orders\n\"\"\")",
+  "output": "    table_name  row_count\n0  dim_product          6\n1     dim_date        118\n2     dim_user         50\n3  fact_orders       2829",
+  "error": false
+ },
+ {
+  "section": "3.2 Fait",
+  "kind": "python",
+  "code": "sql(\"DESCRIBE lakehouse.gold.fact_orders\")",
+  "output": "        Column                         Type Extra Comment\n0     order_id                      varchar              \n1     user_key                       bigint              \n2  product_key                       bigint              \n3     date_key                      integer              \n4   ordered_at  timestamp(6) with time zone              \n5     quantity                      integer              ",
+  "error": false
+ },
+ {
+  "section": "3.2 Fait",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.fact_orders ORDER BY ordered_at LIMIT 5\")",
+  "output": "                               order_id  user_key  product_key  date_key                       ordered_at  quantity\n0  2339ba19-2563-4cc3-8a97-ebf555d596af        37            6  20200101 2020-01-01 00:02:17.891488+00:00         4\n1  b49e04cc-c243-49e7-a387-eaf6d4c3a832        37            1  20200101 2020-01-01 01:28:08.796458+00:00         5\n2  41843b03-04dd-4054-9448-23f7e7e646c7        37            5  20200101 2020-01-01 02:12:56.357080+00:00         2\n3  871c0884-9bdf-40f2-ba2c-0f19f0b2a5d1        37            2  20200101 2020-01-01 03:25:23.717132+00:00         3\n4  3d0a5f0c-0c39-4ec7-9f31-74054d183eba        37            4  20200101 2020-01-01 04:25:11.371958+00:00         5",
+  "error": false
+ },
+ {
+  "section": "3.3 Requetes etoile",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    SELECT d.year, u.state, p.product,\n           count(*)        AS orders,\n           sum(f.quantity) AS units\n    FROM lakehouse.gold.fact_orders AS f\n    JOIN lakehouse.gold.dim_date    AS d ON d.date_key    = f.date_key\n    JOIN lakehouse.gold.dim_user    AS u ON u.user_key    = f.user_key\n    JOIN lakehouse.gold.dim_product AS p ON p.product_key = f.product_key\n    GROUP BY d.year, u.state, p.product\n    ORDER BY units DESC\n    LIMIT 10\n\"\"\")",
+  "output": "   year state    product  orders  units\n0  2020    FM    brioche      43    134\n1  2020    VI      bread      37    110\n2  2020    HI      bread      35    110\n3  2020    VI  croissant      34    107\n4  2020    HI  croissant      36    107\n5  2020    VI    brioche      33    104\n6  2020    FM  croissant      32    102\n7  2020    AE      bread      31    100\n8  2020    FM      donut      33     98\n9  2020    VT      drink      33     96",
+  "error": false
+ },
+ {
+  "section": "3.3 Requetes etoile",
+  "kind": "python",
+  "code": "star = sql(\"\"\"\n    SELECT u.state, d.year, d.month,\n           count(*)                   AS orders,\n           sum(f.quantity)            AS units,\n           count(DISTINCT f.user_key) AS buyers\n    FROM lakehouse.gold.fact_orders AS f\n    JOIN lakehouse.gold.dim_date    AS d ON d.date_key = f.date_key\n    JOIN lakehouse.gold.dim_user    AS u ON u.user_key = f.user_key\n    GROUP BY u.state, d.year, d.month\n    ORDER BY d.year, d.month, u.state\n    LIMIT 10\n\"\"\")\nstar",
+  "output": "  state  year  month  orders  units  buyers\n0    AL  2020      1      65    199       1\n1    AP  2020      1      17     49       1\n2    AS  2020      1      12     40       1\n3    CO  2020      1      17     43       1\n4    FM  2020      1      66    200       1\n5    GA  2020      1       4     12       1\n6    IN  2020      1      49    175       1\n7    KY  2020      1      83    256       1\n8    MH  2020      1      21     57       1\n9    NE  2020      1      11     30       1",
+  "error": false
+ },
+ {
+  "section": "3.3 Requetes etoile",
+  "kind": "python",
+  "code": "ref = sql(\"SELECT state, orders, units, buyers FROM lakehouse.gold.orders_by_state_month ORDER BY month, state LIMIT 10\")\nprint(ref.to_string())\nprint(\"Identique a l'etoile :\", (ref[[\"orders\",\"units\",\"buyers\"]].values == star[[\"orders\",\"units\",\"buyers\"]].values).all() and (ref.state.values == star.state.values).all())",
+  "output": "  state  orders  units  buyers\n0    AL      65    199       1\n1    AP      17     49       1\n2    AS      12     40       1\n3    CO      17     43       1\n4    FM      66    200       1\n5    GA       4     12       1\n6    IN      49    175       1\n7    KY      83    256       1\n8    MH      21     57       1\n9    NE      11     30       1\nIdentique a l'etoile : True",
+  "error": false
+ },
+ {
+  "section": "3.4 Validation",
+  "kind": "python",
+  "code": "silver_orders = sql(\"SELECT count(*) AS v FROM lakehouse.silver.orders\").iloc[0, 0]\nfact_orders = sql(\"SELECT count(*) AS v FROM lakehouse.gold.fact_orders\").iloc[0, 0]\nsilver_units = sql(\"SELECT sum(quantity) AS v FROM lakehouse.silver.orders\").iloc[0, 0]\nfact_units = sql(\"SELECT sum(quantity) AS v FROM lakehouse.gold.fact_orders\").iloc[0, 0]\nassert silver_orders == fact_orders, f\"{silver_orders} != {fact_orders}\"\nassert silver_units == fact_units, f\"{silver_units} != {fact_units}\"\nunmatched = sql(\"\"\"\n    SELECT count(*) AS v\n    FROM lakehouse.gold.fact_orders AS f\n    LEFT JOIN lakehouse.gold.dim_user    AS u ON u.user_key    = f.user_key\n    LEFT JOIN lakehouse.gold.dim_product AS p ON p.product_key = f.product_key\n    LEFT JOIN lakehouse.gold.dim_date    AS d ON d.date_key    = f.date_key\n    WHERE u.user_key IS NULL OR p.product_key IS NULL OR d.date_key IS NULL\n\"\"\").iloc[0, 0]\nassert unmatched == 0, f\"{unmatched} orders without a complete dimension row\"\nprint(silver_orders, fact_orders, silver_units, fact_units, unmatched)",
+  "output": "2829 2829 8615 8615 0",
+  "error": false
+ },
+ {
+  "section": "3.4 Validation",
+  "kind": "python",
+  "code": "# Controle supplementaire (hors enonce) : la cle pointe-t-elle vers le BON utilisateur / produit ?\nsql(\"\"\"\n    SELECT\n      count_if(u.user_id <> o.user_id)  AS wrong_user,\n      count_if(p.product <> o.product)  AS wrong_product,\n      count_if(f.ordered_at <> o.ordered_at OR f.quantity <> o.quantity) AS wrong_measure\n    FROM lakehouse.gold.fact_orders f\n    JOIN lakehouse.silver.orders o ON o.order_id = f.order_id\n    JOIN lakehouse.gold.dim_user u ON u.user_key = f.user_key\n    JOIN lakehouse.gold.dim_product p ON p.product_key = f.product_key\n\"\"\")",
+  "output": "   wrong_user  wrong_product  wrong_measure\n0           0              0              0",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.orders_by_state_month_part\n    WITH (partitioning = ARRAY['month(month)'])\n    AS SELECT * FROM lakehouse.gold.orders_by_state_month\n\"\"\")",
+  "output": "   rows\n0    50",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT partition, record_count, file_count FROM lakehouse.gold.\"orders_by_state_month_part$partitions\" ORDER BY partition LIMIT 5\"\"\")",
+  "output": "            partition  record_count  file_count\n0  (month_month: 600)            17           1\n1  (month_month: 601)            10           1\n2  (month_month: 602)            13           1\n3  (month_month: 603)            10           1",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT regexp_extract(file_path, '[^/]+/[^/]+/[^/]+$') AS file, record_count, file_size_in_bytes FROM lakehouse.gold.\"orders_by_state_month_part$files\" ORDER BY file LIMIT 6\"\"\")",
+  "output": "                                                                                                file  record_count  file_size_in_bytes\n0  data/month_month=2020-01/20261109_123931_00060_ff7zw-b3fa9a24-6cbe-4449-a643-c28f919fc5ae.parquet            17                1040\n1  data/month_month=2020-02/20261109_123931_00060_ff7zw-9ca7df27-a8f9-4389-98cd-093efcd05df2.parquet            10                 963\n2  data/month_month=2020-03/20261109_123931_00060_ff7zw-b6acc66d-d13e-4243-a27d-3ce7a3718731.parquet            13                 999\n3  data/month_month=2020-04/20261109_123931_00060_ff7zw-444d9432-cd57-4c77-9726-ff743ddcca66.parquet            10                 966",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT count(*) AS files, sum(record_count) AS rows FROM lakehouse.gold.\"orders_by_state_month$files\" \"\"\")",
+  "output": "   files  rows\n0      1    50",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT count(*) AS files, sum(record_count) AS rows FROM lakehouse.gold.\"orders_by_state_month_part$files\" \"\"\")",
+  "output": "   files  rows\n0      4    50",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "print(sql(\"\"\"EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.orders_by_state_month WHERE month = TIMESTAMP '2020-02-01 00:00:00 UTC' \"\"\").iloc[0,0])",
+  "output": "Trino version: 480\nQueued: 643.91us, Analysis: 196.52ms, Planning: 407.47ms, Execution: 1.60s, Finishing: 0.00ns\nFragment 1 [SINGLE]\n    CPU: 2.46ms, Scheduled: 2.57ms, Blocked 1.22s (Input: 816.13ms, Output: 0.00ns), Input: 1 row (9B); per task: avg.: 1.00 std.dev.: 0.00, Output: 1 row (9B)\n    Peak Memory: 96B, Tasks count: 1; per task: max: 96B\n    Output layout: [sum]\n    Output partitioning: SINGLE []\n    Aggregate[type = FINAL]\n    \u2502   Layout: [sum:bigint]\n    \u2502   Estimates: {rows: 1 (9B), cpu: 113, memory: 9B, network: 0B}\n    \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 0.00ns (0.00%), Output: 1 row (9B)\n    \u2502   Input avg.: 1.00 rows, Input std.dev.: 0.00%\n    \u2502   sum := sum(sum_0)\n    \u2514\u2500 LocalExchange[partitioning = SINGLE]\n       \u2502   Layout: [sum_0:bigint]\n       \u2502   Estimates: {rows: 13 (113B), cpu: 0, memory: 0B, network: 0B}\n       \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 407.00ms (33.28%), Output: 1 row (9B)\n       \u2502   Input avg.: 0.50 rows, Input std.dev.: 100.00%\n       \u2514\u2500 RemoteSource[sourceFragmentIds = [2]]\n              Layout: [sum_0:bigint]\n              CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 816.00ms (66.72%), Output: 1 row (9B)\n              Input avg.: 0.50 rows, Input std.dev.: 100.00%\n\nFragment 2 [SOURCE]\n    CPU: 12.01ms, Scheduled: 95.19ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 50 rows (1.01kB); per task: avg.: 50.00 std.dev.: 0.00, Output: 1 row (9B)\n    Peak Memory: 96B, Tasks count: 1; per task: max: 96B\n    Output layout: [sum_0]\n    Output partitioning: SINGLE []\n    Aggregate[type = PARTIAL]\n    \u2502   Layout: [sum_0:bigint]\n    \u2502   Estimates: {rows: 13 (113B), cpu: ?, memory: ?, network: ?}\n    \u2502   CPU: 1.00ms (8.33%), Scheduled: 1.00ms (1.05%), Blocked: 0.00ns (0.00%), Output: 1 row (9B)\n    \u2502   Input avg.: 10.00 rows, Input std.dev.: 0.00%\n    \u2502   sum_0 := sum(orders)\n    \u2514\u2500 ScanFilterProject[table = lakehouse:gold.orders_by_state_month$data@2562529447020369591, filterPredicate = (month = timestamp(6) with time zone '2020-02-01 00:00:00.000000 UTC')]\n           Layout: [orders:bigint]\n           Estimates: {rows: 50 (450B), cpu: 1.07k, memory: 0B, network: 0B}/{rows: 13 (113B), cpu: 1.07k, memory: 0B, network: 0B}/{rows: 13 (113B), cpu: 113, memory: 0B, network: 0B}\n           CPU: 11.00ms (91.67%), Scheduled: 94.00ms (98.95%), Blocked: 0.00ns (0.00%), Output: 10 rows (90B)\n           Input avg.: 50.00 rows, Input std.dev.: 0.00%\n           month := 2:month:timestamp(6) with time zone\n           orders := 3:orders:bigint\n           Input: 50 rows (1.01kB), Filtered: 80.00%, Physical input: 1.35kB, Physical input time: 33.94us, Splits: 1, Splits generation wait time: 367.32ms",
+  "error": false
+ },
+ {
+  "section": "3.5 Exercice 1",
+  "kind": "python",
+  "code": "print(sql(\"\"\"EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.orders_by_state_month_part WHERE month = TIMESTAMP '2020-02-01 00:00:00 UTC' \"\"\").iloc[0,0])",
+  "output": "Trino version: 480\nQueued: 623.46us, Analysis: 206.87ms, Planning: 184.15ms, Execution: 695.82ms, Finishing: 0.00ns\nFragment 1 [SINGLE]\n    CPU: 2.12ms, Scheduled: 2.20ms, Blocked 900.61ms (Input: 600.66ms, Output: 0.00ns), Input: 1 row (9B); per task: avg.: 1.00 std.dev.: 0.00, Output: 1 row (9B)\n    Peak Memory: 96B, Tasks count: 1; per task: max: 96B\n    Output layout: [sum]\n    Output partitioning: SINGLE []\n    Aggregate[type = FINAL]\n    \u2502   Layout: [sum:bigint]\n    \u2502   Estimates: {rows: 1 (9B), cpu: 90, memory: 9B, network: 0B}\n    \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 0.00ns (0.00%), Output: 1 row (9B)\n    \u2502   Input avg.: 1.00 rows, Input std.dev.: 0.00%\n    \u2502   sum := sum(sum_0)\n    \u2514\u2500 LocalExchange[partitioning = SINGLE]\n       \u2502   Layout: [sum_0:bigint]\n       \u2502   Estimates: {rows: 10 (90B), cpu: 0, memory: 0B, network: 0B}\n       \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 300.00ms (33.30%), Output: 1 row (9B)\n       \u2502   Input avg.: 0.50 rows, Input std.dev.: 100.00%\n       \u2514\u2500 RemoteSource[sourceFragmentIds = [2]]\n              Layout: [sum_0:bigint]\n              CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 601.00ms (66.70%), Output: 1 row (9B)\n              Input avg.: 0.50 rows, Input std.dev.: 100.00%\n\nFragment 2 [SOURCE]\n    CPU: 22.60ms, Scheduled: 109.95ms, Blocked 0.00ns (Input: 0.00ns, Output: 0.00ns), Input: 10 rows (220B); per task: avg.: 10.00 std.dev.: 0.00, Output: 1 row (9B)\n    Peak Memory: 96B, Tasks count: 1; per task: max: 96B\n    Output layout: [sum_0]\n    Output partitioning: SINGLE []\n    Aggregate[type = PARTIAL]\n    \u2502   Layout: [sum_0:bigint]\n    \u2502   Estimates: {rows: 10 (90B), cpu: ?, memory: ?, network: ?}\n    \u2502   CPU: 0.00ns (0.00%), Scheduled: 0.00ns (0.00%), Blocked: 0.00ns (0.00%), Output: 1 row (9B)\n    \u2502   Input avg.: 10.00 rows, Input std.dev.: 0.00%\n    \u2502   sum_0 := sum(orders)\n    \u2514\u2500 ScanFilterProject[table = lakehouse:gold.orders_by_state_month_part$data@4374313399918356290, filterPredicate = (month = timestamp(6) with time zone '2020-02-01 00:00:00.000000 UTC')]\n           Layout: [orders:bigint]\n           Estimates: {rows: 10 (90B), cpu: 220, memory: 0B, network: 0B}/{rows: 10 (90B), cpu: 220, memory: 0B, network: 0B}/{rows: 10 (90B), cpu: 90, memory: 0B, network: 0B}\n           CPU: 22.00ms (100.00%), Scheduled: 109.00ms (100.00%), Blocked: 0.00ns (0.00%), Output: 10 rows (90B)\n           Input avg.: 10.00 rows, Input std.dev.: 0.00%\n           month := 2:month:timestamp(6) with time zone\n           orders := 3:orders:bigint\n           Input: 10 rows (220B), Filtered: 0.00%, Physical input: 963B, Physical input time: 13.15us, Splits: 1, Splits generation wait time: 111.93ms",
+  "error": false
+ },
+ {
+  "section": "3.6 Exercice 2",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    CREATE TABLE lakehouse.gold.cohorts AS\n    SELECT\n        (year(u.birthdate) / 10) * 10 AS decade,\n        count(DISTINCT u.user_id)     AS users,\n        count(o.order_id)             AS orders,\n        round(CAST(sum(o.quantity) AS double) / count(o.order_id), 2) AS avg_units_per_order\n    FROM lakehouse.silver.users u\n    LEFT JOIN lakehouse.silver.orders o ON o.user_id = u.user_id\n    GROUP BY 1\n\"\"\")",
+  "output": "   rows\n0    11",
+  "error": false
+ },
+ {
+  "section": "3.6 Exercice 2",
+  "kind": "python",
+  "code": "sql(\"SELECT * FROM lakehouse.gold.cohorts ORDER BY decade\")",
+  "output": "    decade  users  orders  avg_units_per_order\n0     1910      1      47                 3.19\n1     1930      5     198                 3.14\n2     1940      4     273                 3.06\n3     1950      6     340                 3.01\n4     1960      8     433                 3.02\n5     1970      5     369                 2.99\n6     1980      2      81                 2.79\n7     1990      5     402                 3.07\n8     2000      4     154                 2.99\n9     2010      5     244                 3.08\n10    2020      5     288                 3.12",
+  "error": false
+ },
+ {
+  "section": "3.6 Exercice 2",
+  "kind": "python",
+  "code": "sql(\"SELECT sum(users) AS users, sum(orders) AS orders FROM lakehouse.gold.cohorts\")",
+  "output": "   users  orders\n0     50    2829",
+  "error": false
+ },
+ {
+  "section": "3.7 Exercice 3",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    INSERT INTO lakehouse.silver.orders\n    SELECT '00000000-0000-0000-0000-000000000001', user_id,\n           TIMESTAMP '2020-02-10 12:00:00 UTC', 3, 'croissant'\n    FROM lakehouse.silver.users ORDER BY user_id LIMIT 1\n\"\"\")",
+  "output": "   rows\n0     1",
+  "error": false
+ },
+ {
+  "section": "3.7 Exercice 3",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS orders FROM lakehouse.silver.orders\")",
+  "output": "   orders\n0    2830",
+  "error": false
+ },
+ {
+  "section": "3.7 Exercice 3",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    MERGE INTO lakehouse.gold.orders_by_state_month AS t\n    USING (\n        SELECT u.state, date_trunc('month', o.ordered_at) AS month,\n               count(*) AS orders, sum(o.quantity) AS units, count(DISTINCT o.user_id) AS buyers\n        FROM lakehouse.silver.orders o JOIN lakehouse.silver.users u ON u.user_id = o.user_id\n        GROUP BY 1, 2\n    ) AS s\n    ON t.state = s.state AND t.month = s.month\n    WHEN MATCHED THEN UPDATE SET orders = s.orders, units = s.units, buyers = s.buyers\n    WHEN NOT MATCHED THEN INSERT (state, month, orders, units, buyers) VALUES (s.state, s.month, s.orders, s.units, s.buyers)\n\"\"\")",
+  "output": "   rows\n0    51",
+  "error": false
+ },
+ {
+  "section": "3.7 Exercice 3",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT snapshot_id, committed_at, operation FROM lakehouse.gold.\"orders_by_state_month$snapshots\" ORDER BY committed_at\"\"\")",
+  "output": "           snapshot_id                  committed_at  operation\n0  2562529447020369591 2026-11-09 12:38:23.232+00:00     append\n1  7631086578838822541 2026-11-09 12:39:51.360+00:00  overwrite",
+  "error": false
+ },
+ {
+  "section": "3.7 Exercice 3",
+  "kind": "python",
+  "code": "snap = sql(\"\"\"SELECT snapshot_id FROM lakehouse.gold.\"orders_by_state_month$snapshots\" ORDER BY committed_at LIMIT 1\"\"\").iloc[0,0]\nprint(sql(f\"SELECT sum(orders) AS orders_before FROM lakehouse.gold.orders_by_state_month FOR VERSION AS OF {snap}\").to_string())\nprint(sql(\"SELECT sum(orders) AS orders_after FROM lakehouse.gold.orders_by_state_month\").to_string())",
+  "output": "   orders_before\n0           2829\n   orders_after\n0          2830",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT snapshot_id, committed_at, operation FROM lakehouse.gold.\"top_products$snapshots\" ORDER BY committed_at\"\"\")",
+  "output": "           snapshot_id                  committed_at operation\n0  5679923997119223469 2026-11-09 12:38:28.711+00:00    append\n1  7721050443174576655 2026-11-09 12:38:45.105+00:00    delete\n2   433421330162471359 2026-11-09 12:38:48.706+00:00    append",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT regexp_extract(file_path, '[^/]+$') AS file, record_count, file_size_in_bytes FROM lakehouse.gold.\"top_products$files\" \"\"\")",
+  "output": "                                                                       file  record_count  file_size_in_bytes\n0  20261109_123846_00035_ff7zw-a6e69d7d-7512-4da7-a5b0-a90db5d8ae55.parquet             6                 760",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"ALTER TABLE lakehouse.gold.top_products EXECUTE optimize\")",
+  "output": "Empty DataFrame\nColumns: [rows]\nIndex: []",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT snapshot_id, committed_at, operation FROM lakehouse.gold.\"top_products$snapshots\" ORDER BY committed_at\"\"\")",
+  "output": "           snapshot_id                  committed_at operation\n0  5679923997119223469 2026-11-09 12:38:28.711+00:00    append\n1  7721050443174576655 2026-11-09 12:38:45.105+00:00    delete\n2   433421330162471359 2026-11-09 12:38:48.706+00:00    append",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT regexp_extract(file_path, '[^/]+$') AS file, record_count, file_size_in_bytes FROM lakehouse.gold.\"top_products$files\" \"\"\")",
+  "output": "                                                                       file  record_count  file_size_in_bytes\n0  20261109_123846_00035_ff7zw-a6e69d7d-7512-4da7-a5b0-a90db5d8ae55.parquet             6                 760",
+  "error": false
+ },
+ {
+  "section": "3.8 Exercice 4",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS products FROM lakehouse.gold.top_products\")",
+  "output": "   products\n0         6",
+  "error": false
+ },
+ {
+  "section": "3.9",
+  "kind": "python",
+  "code": "conn.close()",
+  "output": "",
+  "error": false
+ },
+ {
+  "section": "3.0b",
+  "kind": "python",
+  "code": "import os, pandas as pd, trino\npd.set_option(\"display.width\", 220)\nconn = trino.dbapi.connect(host=os.environ[\"TRINO_HOST\"], port=int(os.environ[\"TRINO_PORT\"]), user=os.environ[\"TRINO_USER\"], http_scheme=\"http\", catalog=\"lakehouse\")\ndef sql(statement):\n    cur = conn.cursor(); cur.execute(statement); rows = cur.fetchall()\n    columns = [c[0] for c in cur.description] if cur.description else []\n    return pd.DataFrame(rows, columns=columns)",
+  "output": "",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT snapshot_id, committed_at, operation, summary['total-data-files'] AS total_files FROM lakehouse.gold.\"orders_by_state_month$snapshots\" ORDER BY committed_at\"\"\")",
+  "output": "           snapshot_id                  committed_at  operation total_files\n0  2562529447020369591 2026-11-09 12:38:23.232+00:00     append           1\n1  7631086578838822541 2026-11-09 12:39:51.360+00:00  overwrite           2",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT regexp_extract(file_path, '[^/]+$') AS file, record_count, file_size_in_bytes FROM lakehouse.gold.\"orders_by_state_month$files\" \"\"\")",
+  "output": "                                                                       file  record_count  file_size_in_bytes\n0  20261109_123813_00018_ff7zw-7ea7b533-f123-4b8c-a018-d2d49d0fa8b6.parquet            50                1379\n1  20261109_123947_00072_ff7zw-92536868-0190-4d5b-a2d4-ca01f5669b97.parquet            51                1376\n2  20261109_123947_00072_ff7zw-085eca89-1dd2-4bd7-8718-83687102ae3e.parquet            50                1292",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"ALTER TABLE lakehouse.gold.orders_by_state_month EXECUTE optimize\")",
+  "output": "Empty DataFrame\nColumns: [rows]\nIndex: []",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT snapshot_id, committed_at, operation, summary['total-data-files'] AS total_files FROM lakehouse.gold.\"orders_by_state_month$snapshots\" ORDER BY committed_at\"\"\")",
+  "output": "           snapshot_id                  committed_at  operation total_files\n0  2562529447020369591 2026-11-09 12:38:23.232+00:00     append           1\n1  7631086578838822541 2026-11-09 12:39:51.360+00:00  overwrite           2\n2  2862989351510730013 2026-11-09 12:40:02.228+00:00    replace           1",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"\"\"SELECT regexp_extract(file_path, '[^/]+$') AS file, record_count, file_size_in_bytes FROM lakehouse.gold.\"orders_by_state_month$files\" \"\"\")",
+  "output": "                                                                       file  record_count  file_size_in_bytes\n0  20261109_124000_00085_ff7zw-502be6e6-eceb-41fb-b823-012c05c24444.parquet            51                1376",
+  "error": false
+ },
+ {
+  "section": "3.8b Exercice 4 (table reecrite par MERGE)",
+  "kind": "python",
+  "code": "sql(\"SELECT count(*) AS n, sum(orders) AS orders FROM lakehouse.gold.orders_by_state_month\")",
+  "output": "    n  orders\n0  51    2830",
+  "error": false
+ },
+ {
+  "section": "3.10 Stockage gold",
+  "kind": "bash",
+  "code": "aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://user-r-combe-tamain-ece/warehouse/gold/ --recursive | grep -E 'parquet' | sed -E 's#warehouse/gold/##' | cut -c1-150",
+  "output": "2026-11-09 12:39:43        893 cohorts-a73e860675754030b64653beaf292bf6/data/20261109_123940_00067_ff7zw-d4db2219-4dd7-4b76-87de-9b5d84ad8ba0.parquet\n2026-11-09 12:39:02       2052 dim_date-f3f9dba6528941e0a9479a82bd3cb923/data/20261109_123900_00043_ff7zw-a1596160-f791-4d32-869a-fc5d51d4bdb1.parquet\n2026-11-09 12:38:58        432 dim_product-6d9b88b4052e4c5d9fe3b2b599ebf265/data/20261109_123857_00041_ff7zw-923a6b59-d95d-487d-aad3-90b6e712427c.parq\n2026-11-09 12:38:56       4451 dim_user-62b8e27d81a7414d84635c43c26546c0/data/20261109_123854_00040_ff7zw-e849e98f-2419-4a29-b805-6972a8a236fb.parquet\n2026-11-09 12:39:09      84846 fact_orders-ab1a0ddea23f4a5ea42aca318b7fc0bd/data/20261109_123905_00047_ff7zw-0b21c30f-07d3-469c-a872-7d41f0bae06b.parq\n2026-11-09 12:38:21       1379 orders_by_state_month-527bf8102b52488e809597f96719bf4d/data/20261109_123813_00018_ff7zw-7ea7b533-f123-4b8c-a018-d2d49d0\n2026-11-09 12:39:50       1292 orders_by_state_month-527bf8102b52488e809597f96719bf4d/data/20261109_123947_00072_ff7zw-085eca89-1dd2-4bd7-8718-8368710\n2026-11-09 12:39:50       1376 orders_by_state_month-527bf8102b52488e809597f96719bf4d/data/20261109_123947_00072_ff7zw-92536868-0190-4d5b-a2d4-ca01f56\n2026-11-09 12:40:01       1376 orders_by_state_month-527bf8102b52488e809597f96719bf4d/data/20261109_124000_00085_ff7zw-502be6e6-eceb-41fb-b823-012c05c\n2026-11-09 12:39:32       1040 orders_by_state_month_part-11df7c476b6140f6b2aa3b0eac59d830/data/month_month=2020-01/20261109_123931_00060_ff7zw-b3fa9a\n2026-11-09 12:39:32        963 orders_by_state_month_part-11df7c476b6140f6b2aa3b0eac59d830/data/month_month=2020-02/20261109_123931_00060_ff7zw-9ca7df\n2026-11-09 12:39:32        999 orders_by_state_month_part-11df7c476b6140f6b2aa3b0eac59d830/data/month_month=2020-03/20261109_123931_00060_ff7zw-b6acc6\n2026-11-09 12:39:32        966 orders_by_state_month_part-11df7c476b6140f6b2aa3b0eac59d830/data/month_month=2020-04/20261109_123931_00060_ff7zw-444d94\n2026-11-09 12:38:28        760 top_products-a919644568fd44a2b9a51a41e5121fad/data/20261109_123825_00020_ff7zw-88282628-12cc-4a8e-b06e-127d4a2f5957.par\n2026-11-09 12:38:48        760 top_products-a919644568fd44a2b9a51a41e5121fad/data/20261109_123846_00035_ff7zw-a6e69d7d-7512-4da7-a5b0-a90db5d8ae55.par\n2026-11-09 12:38:34       3612 user_activity-3c5e09ab30074b35b9a09f5dadb8f49b/data/20261109_123830_00022_ff7zw-5ecca1fd-2ba6-447a-ba75-fa876eaa6a14.pa",
+  "error": false
+ },
+ {
+  "section": "2.3b Stockage silver",
+  "kind": "bash",
+  "code": "aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://user-r-combe-tamain-ece/warehouse/",
+  "output": "                           PRE gold/\n                           PRE silver/",
+  "error": false
+ },
+ {
+  "section": "3.4b",
+  "kind": "python",
+  "code": "import os, pandas as pd, trino\npd.set_option(\"display.width\", 200)\nconn = trino.dbapi.connect(host=os.environ[\"TRINO_HOST\"], port=int(os.environ[\"TRINO_PORT\"]), user=os.environ[\"TRINO_USER\"], http_scheme=\"http\", catalog=\"lakehouse\")\ndef sql(statement):\n    cur = conn.cursor(); cur.execute(statement); rows = cur.fetchall()\n    columns = [c[0] for c in cur.description] if cur.description else []\n    return pd.DataFrame(rows, columns=columns)",
+  "output": "",
+  "error": false
+ },
+ {
+  "section": "3.4b",
+  "kind": "python",
+  "code": "# Defaut 1 : un user_id present deux fois dans dim_user (simule, sans ecriture)\nsql(\"\"\"\n    WITH dim_user_dup AS (\n        SELECT user_key, user_id FROM lakehouse.gold.dim_user\n        UNION ALL\n        SELECT 999, user_id FROM lakehouse.gold.dim_user WHERE user_id = '9793b9b4-1374-4146-b2c5-bd89b70b3420'\n    )\n    SELECT (SELECT count(*) FROM lakehouse.silver.orders) AS silver_orders,\n           count(*) AS fact_orders_simule\n    FROM lakehouse.silver.orders o LEFT JOIN dim_user_dup u ON u.user_id = o.user_id\n\"\"\")",
+  "output": "   silver_orders  fact_orders_simule\n0           2830                2930",
+  "error": false
+ },
+ {
+  "section": "3.4b",
+  "kind": "python",
+  "code": "# Defaut 2 : une commande sans produit (NULL), simulee sans ecriture\nsql(\"\"\"\n    WITH orders_null AS (\n        SELECT order_id, product FROM lakehouse.silver.orders\n        UNION ALL SELECT 'x-null-product', CAST(NULL AS varchar)\n    )\n    SELECT count(*) AS orders, count_if(p.product_key IS NULL) AS product_key_null\n    FROM orders_null o LEFT JOIN lakehouse.gold.dim_product p ON p.product = o.product\n\"\"\")",
+  "output": "   orders  product_key_null\n0    2831                 1",
+  "error": false
+ },
+ {
+  "section": "3.4b",
+  "kind": "python",
+  "code": "# Defaut 3 : ajout d'un utilisateur dans dim_user reconstruite avec row_number() (simule)\nsql(\"\"\"\n    WITH new_dim AS (\n        SELECT row_number() OVER (ORDER BY user_id) AS user_key, user_id\n        FROM (SELECT user_id FROM lakehouse.silver.users\n              UNION ALL SELECT '00000000-0000-0000-0000-00000000000a')\n    )\n    SELECT o.user_id, o.user_key AS cle_actuelle, n.user_key AS cle_apres_reconstruction\n    FROM lakehouse.gold.dim_user o JOIN new_dim n ON n.user_id = o.user_id\n    WHERE o.user_key <> n.user_key ORDER BY o.user_key LIMIT 5\n\"\"\")",
+  "output": "                                user_id  cle_actuelle  cle_apres_reconstruction\n0  09a0a0f6-73b0-4091-b634-c1694f76e388             1                         2\n1  0b2f6d5c-700b-4d5f-b89f-72f32a60c652             2                         3\n2  0dde29a6-baa4-471a-9d24-67ac778eedb3             3                         4\n3  1190f938-a66f-47f7-b966-9fa759970043             4                         5\n4  12738a23-5aaa-432f-8e63-22b6ab05347f             5                         6",
+  "error": false
+ },
+ {
+  "section": "3.4b",
+  "kind": "python",
+  "code": "sql(\"\"\"\n    WITH new_dim AS (\n        SELECT row_number() OVER (ORDER BY user_id) AS user_key, user_id\n        FROM (SELECT user_id FROM lakehouse.silver.users\n              UNION ALL SELECT '00000000-0000-0000-0000-00000000000a')\n    )\n    SELECT count_if(o.user_key <> n.user_key) AS users_dont_la_cle_change, count(*) AS users\n    FROM lakehouse.gold.dim_user o JOIN new_dim n ON n.user_id = o.user_id\n\"\"\")",
+  "output": "   users_dont_la_cle_change  users\n0                        50     50",
+  "error": false
+ }
+]

@@ -410,4 +410,285 @@ LAST DEPLOYED: Mon Nov  9 12:27:51 2026
 NAMESPACE: user-r-combe-tamain-ece
 STATUS: deployed
 REVISION: 1
-{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}
+{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}{"nodeId":"trino-coordinator-788685fb59-2zflb","state":"ACTIVE","nodeVersion":{"version":"480"},"environment":"production","coordinator":true,"coordinatorId":"ff7zw","starting":false,"uptime":"39.71s"}[push] ok
+[push] ok
+[push] ok
+=== [12:37:17] 06 labs trino 2 et 3
+=== [12:37:17] 06 labs trino 2 et 3
+=== [12:37:17] 06 labs trino 2 et 3
+[2.0 Connexion] ok: import os
+[2.0 Connexion] ok: import os
+[2.0 Connexion] ok: import os
+[2.0 Connexion] ok: sql("SELECT version()")
+[2.0 Connexion] ok: sql("SELECT version()")
+[2.0 Connexion] ok: sql("SELECT version()")
+[2.1 Catalogues] ok: sql("SHOW CATALOGS")
+[2.1 Catalogues] ok: sql("SHOW CATALOGS")
+[2.1 Catalogues] ok: sql("SHOW CATALOGS")
+[2.1 Catalogues] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.1 Catalogues] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.1 Catalogues] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.1 Catalogues] ok: sql("SHOW TABLES FROM lakehouse.silver")
+[2.1 Catalogues] ok: sql("SHOW TABLES FROM lakehouse.silver")
+[2.1 Catalogues] ok: sql("SHOW TABLES FROM lakehouse.silver")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.orders")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.orders")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.orders")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.users")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.users")
+[2.1 Catalogues] ok: sql("DESCRIBE lakehouse.silver.users")
+[2.2 Silver] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[2.2 Silver] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[2.2 Silver] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[2.2 Silver] ok: sql("SELECT count(*) AS users FROM lakehouse.silver.users")
+[2.2 Silver] ok: sql("SELECT count(*) AS users FROM lakehouse.silver.users")
+[2.2 Silver] ok: sql("SELECT count(*) AS users FROM lakehouse.silver.users")
+[2.2 Silver] ok: sql("""
+[2.2 Silver] ok: sql("""
+[2.2 Silver] ok: sql("""
+[2.2 Silver] ok: sql("""
+[2.2 Silver] ok: sql("""
+[2.2 Silver] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql("""
+[2.3 Metadonnees Iceberg] ok: sql('SELECT * FROM lakehouse.silver."orders$history"')
+[2.3 Metadonnees Iceberg] ok: sql('SELECT * FROM lakehouse.silver."orders$history"')
+[2.3 Metadonnees Iceberg] ok: sql('SELECT * FROM lakehouse.silver."orders$history"')
+[2.3 Metadonnees Iceberg] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.3 Metadonnees Iceberg] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.3 Metadonnees Iceberg] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.4 Plan] ok: plan = sql("""
+[2.4 Plan] ok: plan = sql("""
+[2.4 Plan] ok: plan = sql("""
+[2.4 Plan] ok: stats = sql("""
+[2.4 Plan] ok: stats = sql("""
+[2.4 Plan] ok: stats = sql("""
+[2.4 Plan] ok: sql("""
+[2.4 Plan] ok: sql("""
+[2.4 Plan] ok: sql("""
+[2.5 Gold] ok: sql("CREATE SCHEMA IF NOT EXISTS lakehouse.gold")
+[2.5 Gold] ok: sql("CREATE SCHEMA IF NOT EXISTS lakehouse.gold")
+[2.5 Gold] ok: sql("CREATE SCHEMA IF NOT EXISTS lakehouse.gold")
+[2.5 Gold] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.5 Gold] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.5 Gold] ok: sql("SHOW SCHEMAS FROM lakehouse")
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.orders_by_state_month ORDER BY month
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.orders_by_state_month ORDER BY month
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.orders_by_state_month ORDER BY month
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.top_products ORDER BY units_rank LIM
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.top_products ORDER BY units_rank LIM
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.top_products ORDER BY units_rank LIM
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.user_activity ORDER BY orders DESC L
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.user_activity ORDER BY orders DESC L
+[2.5 Gold] ok: sql("SELECT * FROM lakehouse.gold.user_activity ORDER BY orders DESC L
+[2.5 Gold] ok: sql("SHOW TABLES FROM lakehouse.gold")
+[2.5 Gold] ok: sql("SHOW TABLES FROM lakehouse.gold")
+[2.5 Gold] ok: sql("SHOW TABLES FROM lakehouse.gold")
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.5 Gold] ok: sql("""
+[2.6 Validation] ok: silver_units = sql("SELECT sum(quantity) AS v FROM lakehouse.silver.or
+[2.6 Validation] ok: silver_units = sql("SELECT sum(quantity) AS v FROM lakehouse.silver.or
+[2.6 Validation] ok: silver_units = sql("SELECT sum(quantity) AS v FROM lakehouse.silver.or
+[2.6 Validation] ok: silver_users = sql("SELECT count(*) AS v FROM lakehouse.silver.users")
+[2.6 Validation] ok: silver_users = sql("SELECT count(*) AS v FROM lakehouse.silver.users")
+[2.6 Validation] ok: silver_users = sql("SELECT count(*) AS v FROM lakehouse.silver.users")
+[2.7 Refresh] ok: sql("DELETE FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("DELETE FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("DELETE FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: sql("""
+[2.7 Refresh] ok: first = sql("""
+[2.7 Refresh] ok: first = sql("""
+[2.7 Refresh] ok: first = sql("""
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[2.7 Refresh] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[3.0] ok: import os
+[3.0] ok: import os
+[3.0] ok: import os
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: sql("""
+[3.1 Dimensions] ok: first_day, last_day = sql("""
+[3.1 Dimensions] ok: first_day, last_day = sql("""
+[3.1 Dimensions] ok: first_day, last_day = sql("""
+[3.1 Dimensions] ok: sql(f"""
+[3.1 Dimensions] ok: sql(f"""
+[3.1 Dimensions] ok: sql(f"""
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_user ORDER BY user_key LIMIT 5")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_user ORDER BY user_key LIMIT 5")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_user ORDER BY user_key LIMIT 5")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_product ORDER BY product_key")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_product ORDER BY product_key")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_product ORDER BY product_key")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_date ORDER BY date_key LIMIT 8")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_date ORDER BY date_key LIMIT 8")
+[3.1 Dimensions] ok: sql("SELECT * FROM lakehouse.gold.dim_date ORDER BY date_key LIMIT 8")
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("""
+[3.2 Fait] ok: sql("DESCRIBE lakehouse.gold.fact_orders")
+[3.2 Fait] ok: sql("DESCRIBE lakehouse.gold.fact_orders")
+[3.2 Fait] ok: sql("DESCRIBE lakehouse.gold.fact_orders")
+[3.2 Fait] ok: sql("SELECT * FROM lakehouse.gold.fact_orders ORDER BY ordered_at LIMI
+[3.2 Fait] ok: sql("SELECT * FROM lakehouse.gold.fact_orders ORDER BY ordered_at LIMI
+[3.2 Fait] ok: sql("SELECT * FROM lakehouse.gold.fact_orders ORDER BY ordered_at LIMI
+[3.3 Requetes etoile] ok: sql("""
+[3.3 Requetes etoile] ok: sql("""
+[3.3 Requetes etoile] ok: sql("""
+[3.3 Requetes etoile] ok: star = sql("""
+[3.3 Requetes etoile] ok: star = sql("""
+[3.3 Requetes etoile] ok: star = sql("""
+[3.3 Requetes etoile] ok: ref = sql("SELECT state, orders, units, buyers FROM lakehouse.gold.ord
+[3.3 Requetes etoile] ok: ref = sql("SELECT state, orders, units, buyers FROM lakehouse.gold.ord
+[3.3 Requetes etoile] ok: ref = sql("SELECT state, orders, units, buyers FROM lakehouse.gold.ord
+[3.4 Validation] ok: silver_orders = sql("SELECT count(*) AS v FROM lakehouse.silver.orders
+[3.4 Validation] ok: silver_orders = sql("SELECT count(*) AS v FROM lakehouse.silver.orders
+[3.4 Validation] ok: silver_orders = sql("SELECT count(*) AS v FROM lakehouse.silver.orders
+[3.4 Validation] ok: # Controle supplementaire (hors enonce) : la cle pointe-t-elle vers le
+[3.4 Validation] ok: # Controle supplementaire (hors enonce) : la cle pointe-t-elle vers le
+[3.4 Validation] ok: # Controle supplementaire (hors enonce) : la cle pointe-t-elle vers le
+[3.5 Exercice 1] ok: sql("""
+[3.5 Exercice 1] ok: sql("""
+[3.5 Exercice 1] ok: sql("""
+[3.5 Exercice 1] ok: sql("""SELECT partition, record_count, file_count FROM lakehouse.gold.
+[3.5 Exercice 1] ok: sql("""SELECT partition, record_count, file_count FROM lakehouse.gold.
+[3.5 Exercice 1] ok: sql("""SELECT partition, record_count, file_count FROM lakehouse.gold.
+[3.5 Exercice 1] ok: sql("""SELECT regexp_extract(file_path, '[^/]+/[^/]+/[^/]+$') AS file,
+[3.5 Exercice 1] ok: sql("""SELECT regexp_extract(file_path, '[^/]+/[^/]+/[^/]+$') AS file,
+[3.5 Exercice 1] ok: sql("""SELECT regexp_extract(file_path, '[^/]+/[^/]+/[^/]+$') AS file,
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: sql("""SELECT count(*) AS files, sum(record_count) AS rows FROM lakeho
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.5 Exercice 1] ok: print(sql("""EXPLAIN ANALYZE SELECT sum(orders) FROM lakehouse.gold.or
+[3.6 Exercice 2] ok: sql("""
+[3.6 Exercice 2] ok: sql("""
+[3.6 Exercice 2] ok: sql("""
+[3.6 Exercice 2] ok: sql("SELECT * FROM lakehouse.gold.cohorts ORDER BY decade")
+[3.6 Exercice 2] ok: sql("SELECT * FROM lakehouse.gold.cohorts ORDER BY decade")
+[3.6 Exercice 2] ok: sql("SELECT * FROM lakehouse.gold.cohorts ORDER BY decade")
+[3.6 Exercice 2] ok: sql("SELECT sum(users) AS users, sum(orders) AS orders FROM lakehouse.
+[3.6 Exercice 2] ok: sql("SELECT sum(users) AS users, sum(orders) AS orders FROM lakehouse.
+[3.6 Exercice 2] ok: sql("SELECT sum(users) AS users, sum(orders) AS orders FROM lakehouse.
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[3.7 Exercice 3] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[3.7 Exercice 3] ok: sql("SELECT count(*) AS orders FROM lakehouse.silver.orders")
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("""
+[3.7 Exercice 3] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.7 Exercice 3] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.7 Exercice 3] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.7 Exercice 3] ok: snap = sql("""SELECT snapshot_id FROM lakehouse.gold."orders_by_state_
+[3.7 Exercice 3] ok: snap = sql("""SELECT snapshot_id FROM lakehouse.gold."orders_by_state_
+[3.7 Exercice 3] ok: snap = sql("""SELECT snapshot_id FROM lakehouse.gold."orders_by_state_
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("ALTER TABLE lakehouse.gold.top_products EXECUTE optimize")
+[3.8 Exercice 4] ok: sql("ALTER TABLE lakehouse.gold.top_products EXECUTE optimize")
+[3.8 Exercice 4] ok: sql("ALTER TABLE lakehouse.gold.top_products EXECUTE optimize")
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT snapshot_id, committed_at, operation FROM lakehouse.gold
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8 Exercice 4] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[3.8 Exercice 4] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[3.8 Exercice 4] ok: sql("SELECT count(*) AS products FROM lakehouse.gold.top_products")
+[3.9] ok: conn.close()
+[3.9] ok: conn.close()
+[3.9] ok: conn.close()
+[3.0b] ok: import os, pandas as pd, trino
+[3.0b] ok: import os, pandas as pd, trino
+[3.0b] ok: import os, pandas as pd, trino
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("ALTER TABLE lakehouse.gold.orders_by_state_month EXECUTE optimize
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("ALTER TABLE lakehouse.gold.orders_by_state_month EXECUTE optimize
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("ALTER TABLE lakehouse.gold.orders_by_state_month EXECUTE optimize
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT snapshot_id, committed_at, operation, summary['total-dat
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("""SELECT regexp_extract(file_path, '[^/]+$') AS file, record_coun
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("SELECT count(*) AS n, sum(orders) AS orders FROM lakehouse.gold.o
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("SELECT count(*) AS n, sum(orders) AS orders FROM lakehouse.gold.o
+[3.8b Exercice 4 (table reecrite par MERGE)] ok: sql("SELECT count(*) AS n, sum(orders) AS orders FROM lakehouse.gold.o
+[3.10 Stockage gold] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[3.10 Stockage gold] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[3.10 Stockage gold] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.3b Stockage silver] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.3b Stockage silver] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[2.3b Stockage silver] bash rc=0: aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud s3 ls s3://u
+[3.4b] ok: import os, pandas as pd, trino
+[3.4b] ok: import os, pandas as pd, trino
+[3.4b] ok: import os, pandas as pd, trino
+[3.4b] ok: # Defaut 1 : un user_id present deux fois dans dim_user (simule, sans 
+[3.4b] ok: # Defaut 1 : un user_id present deux fois dans dim_user (simule, sans 
+[3.4b] ok: # Defaut 1 : un user_id present deux fois dans dim_user (simule, sans 
+[3.4b] ok: # Defaut 2 : une commande sans produit (NULL), simulee sans ecriture
+[3.4b] ok: # Defaut 2 : une commande sans produit (NULL), simulee sans ecriture
+[3.4b] ok: # Defaut 2 : une commande sans produit (NULL), simulee sans ecriture
+[3.4b] ok: # Defaut 3 : ajout d'un utilisateur dans dim_user reconstruite avec ro
+[3.4b] ok: # Defaut 3 : ajout d'un utilisateur dans dim_user reconstruite avec ro
+[3.4b] ok: # Defaut 3 : ajout d'un utilisateur dans dim_user reconstruite avec ro
+[3.4b] ok: sql("""
+[3.4b] ok: sql("""
+[3.4b] ok: sql("""
+[env1] bash rc=0: (kubectl get pods -o wide 2>/dev/null | sed -E 's/ +/  /g' | cut -c1-1
+[env1] bash rc=0: (kubectl get pods -o wide 2>/dev/null | sed -E 's/ +/  /g' | cut -c1-1
+[env1] bash rc=0: (kubectl get pods -o wide 2>/dev/null | sed -E 's/ +/  /g' | cut -c1-1
+[env2] bash rc=0: cd ${HOME}/work/tp-adaltas && wc -c users.csv orders.csv && head -c 33
+[env2] bash rc=0: cd ${HOME}/work/tp-adaltas && wc -c users.csv orders.csv && head -c 33
+[env2] bash rc=0: cd ${HOME}/work/tp-adaltas && wc -c users.csv orders.csv && head -c 33
+[env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
+[env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
+[env3] bash rc=0: TOKEN=$(curl -s $POLARIS_URI/api/catalog/v1/oauth/tokens -d grant_type
