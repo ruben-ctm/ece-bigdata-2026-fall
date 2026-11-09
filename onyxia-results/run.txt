@@ -200,3 +200,147 @@ TEST SUITE: None
 job.batch/polaris-bootstrap condition met
 job.batch/polaris-bootstrap condition met
 job.batch/polaris-bootstrap condition met
+[push] ok
+[push] ok
+[push] ok
+=== [12:27:00] 04 silver dans polaris
+=== [12:27:00] 04 silver dans polaris
+=== [12:27:00] 04 silver dans polaris
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: Using incubator modules: jdk.incubator.vector
+WARNING: Using incubator modules: jdk.incubator.vector
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+:: loading settings :: url = jar:file:/usr/local/lib/spark/jars/ivy-2.5.3.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+Ivy Default Cache set to: /home/onyxia/.ivy2.5.2/cache
+The jars for the packages stored in: /home/onyxia/.ivy2.5.2/jars
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+org.apache.iceberg#iceberg-spark-runtime-4.1_2.13 added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d;1.0
+	confs: [default]
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d;1.0
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d;1.0
+	confs: [default]
+	confs: [default]
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+	found org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 in central
+:: resolution report :: resolve 244ms :: artifacts dl 6ms
+	:: modules in use:
+:: resolution report :: resolve 244ms :: artifacts dl 6ms
+	:: modules in use:
+:: resolution report :: resolve 244ms :: artifacts dl 6ms
+	:: modules in use:
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	org.apache.iceberg#iceberg-spark-runtime-4.1_2.13;1.11.0 from central in [default]
+	---------------------------------------------------------------------
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+	|      default     |   1   |   0   |   0   |   0   ||   1   |   0   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d
+:: retrieving :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d
+	confs: [default]
+	confs: [default]
+:: retrieving :: org.apache.spark#spark-submit-parent-3e1aec3d-f081-4b40-8d1c-72d7f7b9569d
+	confs: [default]
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+	0 artifacts copied, 1 already retrieved (0kB/9ms)
+version-hint: 1
+version-hint: 1
+version-hint: 1
++-------------------+-------------------+----------------------+
+|current_snapshot_id|total_records_count|total_data_files_count|
++-------------------+-------------------+----------------------+
+|8407732450608481646|2829               |1                     |
++-------------------+-------------------+----------------------+
+
++-------------------+-------------------+----------------------+
+|current_snapshot_id|total_records_count|total_data_files_count|
++-------------------+-------------------+----------------------+
+|8407732450608481646|2829               |1                     |
++-------------------+-------------------+----------------------+
+
++-------------------+-------------------+----------------------+
+|current_snapshot_id|total_records_count|total_data_files_count|
++-------------------+-------------------+----------------------+
+|8407732450608481646|2829               |1                     |
++-------------------+-------------------+----------------------+
+
++------+
+|orders|
++------+
+|  2829|
++------+
+
++------+
+|orders|
++------+
+|  2829|
++------+
+
++------+
+|orders|
++------+
+|  2829|
++------+
+
++-----+
+|users|
++-----+
+|   50|
++-----+
+
++-----+
+|users|
++-----+
+|   50|
++-----+
+
++-----+
+|users|
++-----+
+|   50|
++-----+
+
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|   silver|    users|      false|
+|   silver|   orders|      false|
++---------+---------+-----------+
+
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|   silver|    users|      false|
+|   silver|   orders|      false|
++---------+---------+-----------+
+
++---------+---------+-----------+
+|namespace|tableName|isTemporary|
++---------+---------+-----------+
+|   silver|    users|      false|
+|   silver|   orders|      false|
++---------+---------+-----------+
+
