@@ -1,0 +1,11 @@
+--- progress 12:17:44
+NAME                       READY   STATUS    RESTARTS   AGE
+polaris-5b5d597f8b-qd6x9   0/1     Pending   0          2m29s
+polaris-postgresql-0       1/1     Running   0          2m29s
+vscode-pyspark-430512-0    1/1     Running   0          26m
+2m29s       Normal    Scheduled                         pod/polaris-postgresql-0                          Successfully assigned user-r-combe-tamain-ece/polaris-postgresql-0 to compute-03
+2m21s       Warning   FailedScheduling                  pod/polaris-5b5d597f8b-qd6x9                      0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+2m19s       Normal    Created                           pod/polaris-postgresql-0                          Container created
+2m19s       Normal    Pulled                            pod/polaris-postgresql-0                          Container image "registry-1.docker.io/bitnami/postgresql:latest" already present on machine and can be accessed by the pod
+2m18s       Normal    Started                           pod/polaris-postgresql-0                          Container started
+2m7s        Warning   Unhealthy                         pod/polaris-postgresql-0                          Readiness probe failed: 127.0.0.1:5432 - no response

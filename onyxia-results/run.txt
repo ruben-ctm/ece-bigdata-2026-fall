@@ -78,3 +78,89 @@ fatal: remote helper 'https' aborted session
 fatal: remote helper 'https' aborted session
 !!! 00 sources a echoue
 !!! 00 sources a echoue
+[push] ok
+[push] ok
+=== [12:10:02] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+=== [12:10:02] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+shell-init: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+chdir: error retrieving current directory: getcwd: cannot access parent directories: No such file or directory
+=== [12:15:03] 00 sources
+=== [12:15:03] 00 sources
+=== [12:15:03] 00 sources
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+bucket=user-r-combe-tamain-ece s3=https://s3.seaweedfs.adm.adaltas.cloud aws=aws --endpoint-url https://s3.seaweedfs.adm.adaltas.cloud
+--- 01 donnees bronze ignoree (reprise a 03)
+--- 01 donnees bronze ignoree (reprise a 03)
+--- 01 donnees bronze ignoree (reprise a 03)
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+spark=4.1 iceberg=org.apache.iceberg:iceberg-spark-runtime-4.1_2.13:1.11.0
+--- 02 silver spark ignoree (reprise a 03)
+--- 02 silver spark ignoree (reprise a 03)
+--- 02 silver spark ignoree (reprise a 03)
+=== [12:15:08] 03 deploiement polaris
+=== [12:15:08] 03 deploiement polaris
+=== [12:15:08] 03 deploiement polaris
+configmap/polaris-config unchanged
+configmap/polaris-config unchanged
+configmap/polaris-config unchanged
+secret/polaris-credential unchanged
+secret/polaris-credential unchanged
+secret/polaris-credential unchanged
+secret/polaris-s3 unchanged
+secret/polaris-s3 unchanged
+secret/polaris-s3 unchanged
+"polaris" already exists with the same configuration, skipping
+"polaris" already exists with the same configuration, skipping
+"polaris" already exists with the same configuration, skipping
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+...Successfully got an update from the "polaris" chart repository
+Update Complete. ⎈Happy Helming!⎈
+Saving 2 charts
+Downloading polaris from repo https://downloads.apache.org/polaris/helm-chart
+Saving 2 charts
+Downloading polaris from repo https://downloads.apache.org/polaris/helm-chart
+Saving 2 charts
+Downloading polaris from repo https://downloads.apache.org/polaris/helm-chart
+Downloading postgresql from repo oci://registry-1.docker.io/bitnamicharts
+Downloading postgresql from repo oci://registry-1.docker.io/bitnamicharts
+Downloading postgresql from repo oci://registry-1.docker.io/bitnamicharts
+Pulled: registry-1.docker.io/bitnamicharts/postgresql:18.12.15
+Digest: sha256:8ab742fa91169b2c317a0ffa061d279d4964a45850408a319c764b3798242ba2
+Pulled: registry-1.docker.io/bitnamicharts/postgresql:18.12.15
+Digest: sha256:8ab742fa91169b2c317a0ffa061d279d4964a45850408a319c764b3798242ba2
+Pulled: registry-1.docker.io/bitnamicharts/postgresql:18.12.15
+Digest: sha256:8ab742fa91169b2c317a0ffa061d279d4964a45850408a319c764b3798242ba2
+Deleting outdated charts
+Deleting outdated charts
+Deleting outdated charts
+release polaris en etat failed : reinstallation
+release polaris en etat failed : reinstallation
+release polaris en etat failed : reinstallation
+release "polaris" uninstalled
+release "polaris" uninstalled
+release "polaris" uninstalled
+persistentvolumeclaim "data-polaris-postgresql-0" deleted from user-r-combe-tamain-ece namespace
+persistentvolumeclaim "data-polaris-postgresql-0" deleted from user-r-combe-tamain-ece namespace
+persistentvolumeclaim "data-polaris-postgresql-0" deleted from user-r-combe-tamain-ece namespace
+Release "polaris" does not exist. Installing it now.
+Release "polaris" does not exist. Installing it now.
+Release "polaris" does not exist. Installing it now.
