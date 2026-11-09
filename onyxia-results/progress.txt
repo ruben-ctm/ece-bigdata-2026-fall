@@ -20,3 +20,15 @@ vscode-pyspark-430512-0    1/1     Running   0          28m
 14s         Normal    Created                           pod/polaris-5b5d597f8b-qd6x9                      Container created
 14s         Normal    Started                           pod/polaris-5b5d597f8b-qd6x9                      Container started
 3s          Warning   Unhealthy                         pod/polaris-5b5d597f8b-qd6x9                      Readiness probe failed: Get "http://10.0.7.33:8182/q/health/ready": dial tcp 10.0.7.33:8182: connect: connection refused
+--- progress 12:22:49
+NAME                       READY   STATUS    RESTARTS   AGE
+polaris-5b5d597f8b-qd6x9   1/1     Running   0          7m33s
+polaris-bootstrap-6m2dz    0/1     Pending   0          101s
+polaris-postgresql-0       1/1     Running   0          7m33s
+vscode-pyspark-430512-0    1/1     Running   0          31m
+2m46s       Normal    Pulled                            pod/polaris-5b5d597f8b-qd6x9                      Container image "apache/polaris:1.8.0" already present on machine and can be accessed by the pod
+2m46s       Normal    Created                           pod/polaris-5b5d597f8b-qd6x9                      Container created
+2m46s       Normal    Started                           pod/polaris-5b5d597f8b-qd6x9                      Container started
+115s        Warning   Unhealthy                         pod/polaris-5b5d597f8b-qd6x9                      Readiness probe failed: Get "http://10.0.7.33:8182/q/health/ready": dial tcp 10.0.7.33:8182: connect: connection refused
+101s        Warning   FailedScheduling                  pod/polaris-bootstrap-6m2dz                       0/9 nodes are available: 4 Insufficient cpu, 5 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/9 nodes are available: 4 No preemption victims found for incoming pod, 5 Preemption is not helpful for scheduling.
+101s        Normal    SuccessfulCreate                  job/polaris-bootstrap                             Created pod: polaris-bootstrap-6m2dz
