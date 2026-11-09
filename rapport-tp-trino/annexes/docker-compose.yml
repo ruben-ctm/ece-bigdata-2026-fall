@@ -1,0 +1,23 @@
+services:
+  s3:
+    image: chrislusf/seaweedfs:latest
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/s3.json -ip=s3
+    volumes: ["./s3.json:/etc/s3.json:ro"]
+    ports: ["8333:8333"]
+  polaris:
+    image: apache/polaris:latest
+    environment:
+      POLARIS_BOOTSTRAP_CREDENTIALS: "POLARIS,root,s3cr3t"
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: labkey
+      AWS_SECRET_ACCESS_KEY: labsecret
+      polaris.features."ALLOW_INSECURE_STORAGE_TYPES": "true"
+      polaris.features."SUPPORTED_CATALOG_STORAGE_TYPES": '["S3","FILE"]'
+      polaris.readiness.ignore-severe-issues: "true"
+    ports: ["8181:8181","8182:8182"]
+  trino:
+    image: trinodb/trino:480
+    ports: ["8080:8080"]
+    env_file: [trino.env]
+    volumes: ["./lakehouse.properties:/etc/trino/catalog/lakehouse.properties:ro"]
+    depends_on: [polaris, s3]

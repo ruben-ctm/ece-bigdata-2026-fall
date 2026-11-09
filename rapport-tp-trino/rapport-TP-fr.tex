@@ -1,0 +1,358 @@
+% Formatage général
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{helvet}
+\usepackage[french]{babel}
+\frenchbsetup{StandardLists=true}
+\usepackage{csquotes}
+\MakeOuterQuote{"}
+
+% Dimensions
+\usepackage[margin=2cm]{geometry}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+
+% Couleurs
+\usepackage{xcolor}
+\definecolor{darkpowderblue}{rgb}{0.0, 0.2, 0.6}
+\definecolor{gamboge}{rgb}{0.89, 0.61, 0.06}
+\definecolor{ece}{RGB}{0, 122, 123}
+
+% Formatage des titres
+\usepackage{titlesec}
+\setcounter{secnumdepth}{3}
+\titleformat{\section}{\fontsize{18}{18}\bfseries\color{ece}}{\Roman{section}.}{1ex}{}
+\titleformat{\subsection}{\fontsize{16}{16}\bfseries\color{ece}}{\Alph{subsection}.}{1ex}{}
+\titleformat{\subsubsection}{\fontsize{15}{15}\bfseries\color{gamboge}}{(\alph{subsubsection})}{1ex}{}
+
+% En-tête et pied de page
+\usepackage{fancyhdr}
+\renewcommand{\headrulewidth}{0pt}
+\setlength{\headheight}{25pt}
+\fancypagestyle{main}{
+	\fancyhead[L]{\includegraphics[width=2cm]{images/ece.png}}
+	\fancyhead[R]{ING4 Groupe 5}
+	\fancyfoot[C]{\thepage}
+}
+\pagestyle{main}
+
+\newcommand{\HRule}[1]{\rule{\linewidth}{#1}}
+
+% Figures
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[labelfont=bf]{caption}
+\usepackage{float}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\scriptsize,breaklines=true,frame=single,columns=fullflexible,keepspaces=true}
+
+% Question
+\newcommand{\Q}[1]{\vspace{2mm}\par\textbf{\textcolor{ece}{#1}}\ }
+% Figure pleine largeur, hauteur bornée
+\newcommand{\shot}[3]{\begin{figure}[!ht]\centering\includegraphics[width=#2\textwidth,height=0.78\textheight,keepaspectratio]{images/#1.png}\caption{#3}\label{fig:#1}\end{figure}}
+
+% Liens
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=darkpowderblue]{hyperref}
+
+\begin{document}
+
+	\title{
+		\begin{figure}[htb]
+			\begin{minipage}[t]{.45\textwidth}
+				\centering
+				\includegraphics[width=6cm]{images/ece.png}
+			\end{minipage}
+			\hfill
+			\begin{minipage}[t]{.45\textwidth}
+				\centering
+				\raggedleft\vspace{-12mm}\Large{\textbf{ING4}\\ Groupe 5}
+			\end{minipage}
+		\end{figure}
+		\vspace{2cm}
+		\HRule{1.5pt} \\ [0.5cm]
+		\LARGE \textbf{\Large{RAPPORT DE TP}\\ [5mm]
+		\huge{\textcolor{ece}{TP Big Data}}\\ [3mm]
+		\Large{\textcolor{ece}{Trino : labs 2 et 3}}}
+		\HRule{1.5pt} \\ [3mm]
+		\normalsize
+		\vspace{1cm}
+		\begin{figure}[!h]
+			\centering
+			\includegraphics[width=\textwidth]{images/elec.png}
+		\end{figure}
+		\vfill
+	}
+
+	\author{Ruben COMBE-{}-TAMAIN}
+
+	\date{
+		Nous attestons que ce travail est original\\
+		et qu'il a été rédigé de manière autonome.\\ [2mm]
+		\textbf{Le 09/11/2026}
+	}
+
+	\maketitle
+	\newpage
+	\tableofcontents
+	\newpage
+
+%=====================================================================
+\section{Environnement et données}
+\subsection{Infrastructure utilisée}
+
+Les deux labs ont été exécutés sur une \textbf{réplique locale} de la plateforme, en conteneurs Docker, et non sur le cluster Kubernetes Adaltas (Onyxia). Trois services tournent (Figure~\ref{fig:env_docker}) :
+
+\begin{itemize}
+	\item \textbf{Trino 480}, coordinateur seul, même version que le chart Helm du lab de déploiement ;
+	\item \textbf{Apache Polaris 1.8.0}, catalogue Iceberg REST avec authentification OAuth2 ;
+	\item \textbf{SeaweedFS}, stockage compatible S3 (bucket \texttt{lab}), à la place du S3 de la plateforme.
+\end{itemize}
+
+\shot{env_docker}{1}{Conteneurs de la réplique (\texttt{docker compose ps}).}
+
+Le catalogue Polaris \texttt{lab} pointe vers \texttt{s3://lab/warehouse} (Figure~\ref{fig:env_polaris}). Trino y accède par le catalogue \texttt{lakehouse} (connecteur Iceberg, type REST, OAuth2), comme dans le lab de déploiement. Les fichiers de configuration sont en annexe~A.
+
+\shot{env_polaris}{1}{Catalogue Polaris \texttt{lab} et état du serveur Trino.}
+
+\subsection{Données}
+
+Les CSV viennent du générateur du lab \texttt{uv} (Faker, graine 42), recopié tel quel. Leur taille correspond exactement à celle donnée dans les labs (7\,351 et 331\,568 octets, Figure~\ref{fig:env_data}). Le jeu contient \textbf{50 utilisateurs et 2\,829 commandes}.
+
+\Q{Écart avec l'énoncé.}Les labs annoncent 5\,000 commandes. Ce n'est pas ce que produit le générateur : \texttt{orders.csv} contient 2\,829 lignes, pour 331\,568 octets (environ 117 octets par ligne). Tous les comptages de ce rapport sont donc 2\,829 et non 5\,000.
+
+\shot{env_data}{0.95}{Tailles des CSV, extrait des fichiers et nombre de lignes.}
+
+La couche silver reproduit les règles du lab Spark (renommage, \texttt{trim}/\texttt{lower}, découpage de l'adresse par expressions régulières, dédoublonnage), mais en Python, puis les tables sont écrites en Iceberg via Trino et Polaris (script en annexe~B). Conséquences, à garder en tête :
+
+\begin{itemize}
+	\item pas de Spark : les snapshots de \texttt{silver} sont écrits par Trino, et non par Spark ;
+	\item la partie « Compare with Spark » du lab 2 et l'exercice~5 du lab 3 n'ont pas été exécutés ;
+	\item les dates de naissance diffèrent de l'exemple du lab (version de Faker), sans effet sur les résultats.
+\end{itemize}
+
+%=====================================================================
+\section{Lab 2 : de silver à gold avec Trino}
+\subsection{Connexion, catalogues et types}
+
+\textbf{Problème :} se connecter à Trino depuis Python et repérer les tables silver. \textbf{Solution :} client \texttt{trino} (DB-API) et une fonction \texttt{sql()} qui exécute puis récupère les résultats dans un \texttt{DataFrame}. \textbf{Résultat :} Trino 480, six catalogues dont \texttt{lakehouse}, deux tables dans \texttt{lakehouse.silver} (Figure~\ref{fig:l2_catalogs}).
+
+\shot{l2_catalogs}{0.65}{Version, catalogues, schémas et tables.}
+
+Le schéma \texttt{silver} est bien exposé via Polaris. Les types sont en Figure~\ref{fig:l2_describe}.
+
+\shot{l2_describe}{0.75}{Types Trino des tables silver.}
+
+\Q{Que change \texttt{catalog=} ?}Il fixe le catalogue par défaut de la session : un nom de table non qualifié est cherché dans \texttt{lakehouse}. Ici toutes les requêtes sont qualifiées en \texttt{catalogue.schéma.table}, donc le paramètre n'a pas d'effet visible.
+
+\Q{Type de \texttt{ordered\_at} ?}\texttt{timestamp(6) with time zone} : précision à la microseconde, avec fuseau (les valeurs sortent en \texttt{+00:00}).
+
+\Q{Type de \texttt{order\_id} ?}\texttt{varchar}, comme la colonne string du lab Spark.
+
+\subsection{Requêtes sur la couche silver}
+
+\textbf{Problème :} vérifier que silver est cohérente avant de construire gold. \textbf{Solution :} comptages, répartition par état (analyse du découpage d'adresse) et recherche des commandes sans utilisateur (\texttt{LEFT JOIN} + \texttt{IS NULL}). \textbf{Résultat :} Figure~\ref{fig:l2_silver}.
+
+\shot{l2_silver}{0.7}{Comptages, états et commandes orphelines.}
+
+\begin{itemize}
+	\item 2\,829 commandes et 50 utilisateurs : 50 est le nombre attendu par le lab Spark.
+	\item Les états \texttt{AE} (3 utilisateurs, 3 sans ville) et \texttt{AP} (2, 2 sans ville) sont des adresses militaires (\texttt{APO}/\texttt{DPO}) sans ville : le \texttt{NULL} sur \texttt{city} est voulu.
+	\item \textbf{0 commande orpheline} : chaque \texttt{user\_id} de \texttt{orders} existe dans \texttt{users}.
+\end{itemize}
+
+\Q{Quel test dbt cette requête remplace-t-elle ?}Le test \texttt{relationships} (clé étrangère \texttt{orders.user\_id} vers \texttt{users.user\_id}). Pour l'exécuter à chaque rafraîchissement, on l'enchaîne après la transformation dans un job qui échoue si \texttt{orphan\_orders > 0}.
+
+\Q{Que dit l'absence de session ou de job ?}La requête est exécutée immédiatement par le coordinateur, sans soumission : Trino convient aux requêtes interactives ou ad hoc, alors que Spark a un coût de démarrage de session.
+
+\subsection{Métadonnées Iceberg}
+
+Les tables cachées \texttt{\$snapshots}, \texttt{\$history} et \texttt{\$files} donnent l'historique et les fichiers (Figures~\ref{fig:l2_snap} et~\ref{fig:l2_files}).
+
+\shot{l2_snap}{0.75}{Snapshots et historique de \texttt{silver.orders}.}
+
+\Q{Combien de snapshots, écrits par quel moteur ?}\textbf{7 snapshots}, tous de type \texttt{append}, écrits par \textbf{Trino} (la création de la table, puis 6 insertions de 500 lignes au plus). Dans le lab d'origine, ce serait Spark (3 snapshots dans l'exemple) : c'est un écart de ma réplique.
+
+\shot{l2_files}{1}{Fichiers de \texttt{silver.orders} : \texttt{\$files} et \texttt{aws s3 ls} (lignes \texttt{/data/}).}
+
+\Q{\texttt{aws s3 ls} contre \texttt{\$files} ?}On retrouve les mêmes 6 fichiers Parquet (5 de 500 lignes et 1 de 329, soit 2\,829). \texttt{\$files} n'exige \textbf{aucun accès au bucket de ma part} : c'est le serveur Trino qui lit les métadonnées avec ses propres identifiants, localisées par Polaris. \texttt{aws s3 ls} utilise mes identifiants S3.
+
+\subsection{Plan et exécution d'une requête}
+
+La requête étudiée joint \texttt{orders} et \texttt{users} et compte les commandes par état.
+
+\shot{l2_plan}{0.95}{\texttt{EXPLAIN (TYPE DISTRIBUTED)} de la jointure.}
+
+Dans la Figure~\ref{fig:l2_plan} :
+
+\begin{itemize}
+	\item \textbf{3 fragments} : le 0 fait l'agrégation finale, le 1 scanne \texttt{orders}, agrège partiellement et fait la jointure, le 2 scanne \texttt{users} ;
+	\item \textbf{2 \texttt{TableScan}}, un par table (\texttt{ScanFilter} pour \texttt{orders}, car un filtre dynamique est appliqué) ;
+	\item les échanges réseau sont les \texttt{RemoteSource} (fragment~0 vers~1, fragment~1 vers~2) ;
+	\item \textbf{jointure \texttt{REPLICATED}} (broadcast) : \texttt{users} (50 lignes) est diffusée à tous les nœuds, ce qui évite de redistribuer les 2\,829 commandes.
+\end{itemize}
+
+\shot{l2_analyze}{1}{\texttt{EXPLAIN ANALYZE} (extrait des lignes utiles).}
+
+Avec \texttt{EXPLAIN ANALYZE} (Figure~\ref{fig:l2_analyze}), l'exécution fait apparaître un fragment de plus (1 à 3) : le fragment 2 lit 2\,879 lignes (2\,829 + 50) avec 64,8~ms de CPU et 128~ko de mémoire de pointe, le fragment 3 lit les 50 utilisateurs. Le scan d'\texttt{orders} utilise 6 splits, soit un par fichier Parquet. Le filtre dynamique ne supprime rien (\texttt{Filtered: 0\%}), puisque tous les utilisateurs ont des commandes. À cette taille, l'analyse et la planification (98 + 77~ms) pèsent presque autant que l'exécution (481~ms).
+
+\shot{l2_runtime}{1}{Historique des requêtes (\texttt{system.runtime.queries}).}
+
+\texttt{system.runtime.queries} est accessible (Figure~\ref{fig:l2_runtime}) ; la ligne \texttt{RUNNING} est la requête d'historique elle-même. L'interface web de Trino (\texttt{/ui}) montre la même requête exécutée sans \texttt{EXPLAIN} (Figure~\ref{fig:ui_stages}) : elle y apparaît en \textbf{5 stages} (0 à 4), plus que les 3 fragments du plan ci-dessus : cette version ajoute un \texttt{ORDER BY}, dont le tri s'ajoute aux étapes.
+
+\shot{ui_head}{0.8}{Interface web Trino : détail de la requête (durées, lignes lues).}
+\shot{ui_stages}{0.8}{Interface web Trino : stages de la requête.}
+
+\subsection{Couche gold}
+
+Trois tables Iceberg sont créées par \texttt{CREATE TABLE AS SELECT} dans le schéma \texttt{gold} (Figures~\ref{fig:l2_gold1} à~\ref{fig:l2_gold4}). Le nombre de lignes écrites est le résultat de chaque \texttt{CTAS}.
+
+\shot{l2_gold1}{0.7}{Schéma \texttt{gold} et table \texttt{orders\_by\_state\_month} (50 lignes).}
+\shot{l2_gold2}{0.7}{Table \texttt{top\_products} (6 lignes).}
+
+\texttt{croissant} est le produit le plus vendu (1\,523 unités), suivi de \texttt{drink} (1\,493) et \texttt{brioche} (1\,424).
+
+\shot{l2_gold3}{0.85}{Table \texttt{user\_activity} (50 lignes) : les 10 utilisateurs les plus actifs.}
+\shot{l2_gold4}{1}{Tables du schéma \texttt{gold} et fichier de \texttt{top\_products}.}
+
+\Q{Pourquoi \texttt{LEFT JOIN} pour \texttt{user\_activity} et jointure interne pour \texttt{orders\_by\_state\_month} ?}\texttt{user\_activity} doit contenir tous les utilisateurs, y compris ceux sans commande (50 lignes obtenues). \texttt{orders\_by\_state\_month} part des commandes : une commande sans utilisateur disparaîtrait silencieusement. C'est donc ce choix de jointure interne qui dépend de la requête orpheline : elle renvoie 0, la jointure interne est sans perte.
+
+\Q{Effet de \texttt{current\_date} ?}L'âge change chaque jour, donc \texttt{user\_activity} est périmée dès le lendemain : elle doit être reconstruite au moins une fois par jour, ou stocker la date de naissance et calculer l'âge à la lecture.
+
+\Q{Où sont les fichiers de gold, et qui a décidé ?}Sous \texttt{s3://lab/warehouse/gold/<table>-<identifiant>/data/} (Figure~\ref{fig:l3_storage}). L'emplacement vient de Polaris : base \texttt{default-base-location} du catalogue, plus le nom de la table et un suffixe unique.
+
+\subsection{Validation}
+
+\textbf{Solution :} comparer les agrégats de gold à silver avec des \texttt{assert}. \textbf{Résultat :} aucune \texttt{AssertionError} (Figure~\ref{fig:l2_valid}) : 8\,615 unités dans silver, dans \texttt{orders\_by\_state\_month} et dans \texttt{top\_products} ; 50 utilisateurs et 2\,829 commandes retrouvés dans \texttt{user\_activity}. La couche gold est cohérente avec silver.
+
+\shot{l2_valid}{0.8}{Validation de gold contre silver.}
+
+\subsection{Rafraîchissement et time travel}
+
+\textbf{Solution :} vider \texttt{top\_products} par \texttt{DELETE}, la remplir par \texttt{INSERT}, puis lire la table au premier snapshot (Figure~\ref{fig:l2_refresh}).
+
+\shot{l2_refresh}{0.75}{\texttt{DELETE}, \texttt{INSERT}, snapshots et \texttt{FOR VERSION AS OF}.}
+
+\Q{Combien de snapshots après le rafraîchissement ?}\textbf{3} : \texttt{append} (création), \texttt{delete}, \texttt{append}. Après le \texttt{DELETE}, la table contient 0 ligne ; après l'\texttt{INSERT}, 6. Le time travel sur le premier snapshot renvoie bien 6 produits.
+
+\Q{Que voit un tableau de bord entre les deux ?}Une table \textbf{vide} : chaque instruction est un commit séparé. Ici la fenêtre était d'environ une demi-seconde (0,5~s entre les deux commits), mais elle existe. Avec un \texttt{MERGE}, la mise à jour est un seul commit : le lecteur voit l'ancien état ou le nouveau, jamais un état vide.
+
+\subsection{Comparaison avec Spark}
+
+Cette partie n'a pas été exécutée (pas de Spark dans mon environnement). Réponses de principe, tirées de ce que j'ai observé côté Trino et de ce que demande le lab Spark :
+
+\begin{itemize}
+	\item \textbf{Besoins au-delà de la requête.} Trino : un client Python (\texttt{trino}) et une connexion, rien d'autre. Spark : une session, le jar Iceberg, \texttt{hadoop-aws} et des identifiants S3 temporaires.
+	\item \textbf{Tableau de bord toutes les minutes :} Trino (latence faible). \textbf{Transformation nocturne de 10~To :} Spark (reprise sur perte de partition). \textbf{Exploration de silver par un data scientist :} Trino.
+	\item \textbf{Tolérance aux pannes.} Si un worker est perdu, Trino fait échouer la requête. C'est acceptable ici (requêtes de moins d'une seconde, relancées sans coût) mais pas pour une transformation de 10~To qui dure des heures et serait à refaire entièrement.
+\end{itemize}
+
+%=====================================================================
+\section{Lab 3 : schéma en étoile}
+\subsection{Dimensions}
+
+\textbf{Problème :} modéliser gold en étoile, avec une table de faits et des dimensions. \textbf{Solution :} \texttt{dim\_user} et \texttt{dim\_product} avec une clé de substitution \texttt{row\_number()}, et \texttt{dim\_date} générée par \texttt{sequence()} + \texttt{UNNEST}, de clé \texttt{AAAAMMJJ}. \textbf{Résultat :} Figures~\ref{fig:l3_dims} et~\ref{fig:l3_date}.
+
+\shot{l3_dims}{0.85}{\texttt{dim\_user} (50 lignes) et \texttt{dim\_product} (6 lignes).}
+
+\shot{l3_date}{0.65}{\texttt{dim\_date} : 118 jours, du 2020-01-01 au 2020-04-27.}
+
+\texttt{dim\_date} couvre exactement la période des commandes (première et dernière date lues dans silver). Le 4 janvier 2020 est un samedi : \texttt{day\_of\_week} = 6 et \texttt{is\_weekend} vrai, ce qui valide le calcul.
+
+\subsection{Table de faits}
+
+\texttt{fact\_orders} garde une ligne par commande, avec les clés des dimensions, obtenues par \texttt{LEFT JOIN} (Figure~\ref{fig:l3_fact}) : 2\,829 lignes, comme \texttt{silver.orders}. Les clés sont des \texttt{bigint} (\texttt{row\_number}) et \texttt{date\_key} un \texttt{integer}.
+
+\shot{l3_fact}{0.8}{Comptage des tables de l'étoile, schéma et extrait de \texttt{fact\_orders}.}
+
+\subsection{Requêtes sur l'étoile}
+
+Les requêtes de la Figure~\ref{fig:l3_star} joignent le fait aux seules dimensions utiles. La seconde reconstruit \texttt{orders\_by\_state\_month} sans lire silver ; la comparaison avec la vraie table de gold renvoie \texttt{True} : les 10 premières lignes (commandes, unités, acheteurs) sont identiques.
+
+\shot{l3_star}{1}{Requêtes sur l'étoile et comparaison avec \texttt{orders\_by\_state\_month}.}
+
+\Q{Comparaison des deux approches.}\texttt{orders\_by\_state\_month} répond à une seule question, vite (un scan, aucune jointure). L'étoile répond à toute combinaison d'axes (année $\times$ état $\times$ produit, par exemple) sans nouvelle table, mais coûte des jointures à chaque requête (3 jointures dans la première).
+
+\subsection{Validation}
+
+Les trois contrôles de l'énoncé passent sans erreur (Figure~\ref{fig:l3_valid}) : 2\,829 commandes et 8\,615 unités dans silver et dans le fait, 0 commande sans ligne de dimension complète. J'y ai ajouté un contrôle hors énoncé : en rejoignant le fait à silver par \texttt{order\_id}, la clé pointe toujours vers le bon utilisateur et le bon produit (0 erreur sur les deux) et les mesures sont identiques.
+
+\shot{l3_valid}{0.85}{Validation de l'étoile (\texttt{assert}) et contrôle supplémentaire.}
+
+\Q{Ces contrôles suffisent-ils ?}Non. Compter les lignes et sommer les quantités ne détecte pas une commande rattachée au \textbf{mauvais} utilisateur ou au mauvais produit : si deux clés sont permutées, les totaux restent justes. D'où le contrôle supplémentaire ci-dessus (comparaison ligne à ligne avec silver). On pourrait ajouter l'unicité de \texttt{order\_id} et des clés de dimension, et l'absence de \texttt{NULL} sur les clés.
+
+\Q{Grain.}\texttt{fact\_orders} : une commande. \texttt{dim\_date} : un jour calendaire.
+
+\Q{Quelle assertion casse selon le défaut ?}Testé sans rien écrire (Figure~\ref{fig:l3_defects}) :
+
+\begin{itemize}
+	\item \textbf{\texttt{user\_id} en double dans \texttt{dim\_user}} : la jointure duplique les commandes de cet utilisateur (2\,830 devient 2\,930 lignes de fait simulées), donc \textbf{la première assertion} (nombre de lignes silver contre fait) échoue.
+	\item \textbf{Commande sans produit (\texttt{NULL})} : le nombre de lignes reste correct, mais \texttt{product\_key} est \texttt{NULL} pour 1 ligne (\texttt{NULL = NULL} est faux en SQL), donc \textbf{l'assertion sur les commandes sans dimension complète} échoue.
+\end{itemize}
+
+\shot{l3_defects}{0.9}{Défauts simulés : doublon dans la dimension, produit \texttt{NULL}, instabilité des clés (sans écriture).}
+
+\Q{Clés \texttt{row\_number()} après ajout d'un utilisateur.}Elles ne sont pas stables : en simulant l'ajout d'un utilisateur dont l'identifiant se classe en premier, la clé change pour \textbf{les 50 utilisateurs existants} (Figure~\ref{fig:l3_defects}, deux dernières requêtes). Si \texttt{dim\_user} est reconstruite sans reconstruire \texttt{fact\_orders}, les commandes pointent vers le mauvais utilisateur : il faut reconstruire le fait avec la dimension, ou utiliser des clés persistantes (hash de \texttt{user\_id} ou séquence conservée).
+
+\Q{Un utilisateur déménage.}\texttt{dim\_user} écrase les attributs : \textbf{toutes} ses commandes passées affichent le nouvel état. Garder l'historique demande une dimension à variation lente de type 2 : une ligne par version, avec nouvelle clé de substitution, dates de début et de fin de validité et un indicateur de ligne courante ; le fait référence la version valide à la date de la commande.
+
+\subsection{Exercices}
+
+\subsubsection{Exercice 1 : partitionnement}
+
+\texttt{orders\_by\_state\_month\_part} est partitionnée par mois (\texttt{month(month)}) : 4 partitions et donc 4 fichiers (un par mois), contre 1 fichier pour la table non partitionnée (Figure~\ref{fig:l3_ex1}).
+
+\shot{l3_ex1}{1}{Table partitionnée : partitions, fichiers et comparaison avec la table non partitionnée.}
+
+Avec un filtre sur février 2020 (Figure~\ref{fig:l3_ex1b}), la table non partitionnée lit \textbf{50 lignes} (80\,\% filtrées) et la partitionnée \textbf{10 lignes} : seul le fichier du mois est lu (élagage de partitions). À 50 lignes il n'y a pas de gain de temps mesurable ; l'intérêt apparaît avec de gros volumes.
+
+\shot{l3_ex1b}{1}{\texttt{EXPLAIN ANALYZE} avec filtre sur un mois : sans partition (haut) et avec (bas).}
+
+\subsubsection{Exercice 2 : cohortes par décennie de naissance}
+
+\texttt{gold.cohorts} compte, par décennie, les utilisateurs, leurs commandes et la moyenne d'unités par commande (Figure~\ref{fig:l3_ex2}). 11 décennies, de 1910 à 2020 ; les totaux (50 utilisateurs, 2\,829 commandes) correspondent à silver. La moyenne varie peu (2,79 à 3,19), les cohortes sont petites (1 à 8 utilisateurs), donc peu significatives.
+
+\shot{l3_ex2}{0.8}{Table \texttt{gold.cohorts}.}
+
+\subsubsection{Exercice 3 : INSERT, MERGE et time travel}
+
+Une commande est ajoutée à \texttt{silver.orders} (2\,829 devient 2\,830), puis \texttt{orders\_by\_state\_month} est rafraîchie par \texttt{MERGE} : 51 lignes touchées (50 mises à jour, 1 nouvelle combinaison état-mois). La table a ensuite 2 snapshots (\texttt{append}, \texttt{overwrite}). Le time travel sur le premier donne 2\,829 commandes, la table actuelle 2\,830 (Figure~\ref{fig:l3_ex3}).
+
+\shot{l3_ex3}{0.9}{\texttt{INSERT} dans silver, \texttt{MERGE} dans gold et lecture de l'état précédent.}
+
+\subsubsection{Exercice 4 : \texttt{optimize}}
+
+Sur \texttt{top\_products} (Figure~\ref{fig:l3_ex4}), \texttt{optimize} ne change rien : la table n'a qu'un fichier, il n'y a rien à compacter, et aucun snapshot n'est créé (3 avant, 3 après).
+
+\shot{l3_ex4}{0.9}{\texttt{optimize} sur \texttt{top\_products} : aucun changement.}
+
+Pour voir un effet, je l'ai appliqué à \texttt{orders\_by\_state\_month}, réécrite par le \texttt{MERGE} (Figure~\ref{fig:l3_ex4b}). Avant : 3 entrées dans \texttt{\$files} (le résumé indique 2 fichiers de données ; la troisième est donc, par déduction, le fichier de suppressions écrit par le \texttt{MERGE}). Après : un nouveau snapshot de type \texttt{replace} et \textbf{1 seul fichier} de 51 lignes ; le contenu est inchangé (51 lignes, 2\,830 commandes).
+
+\shot{l3_ex4b}{0.95}{\texttt{optimize} sur \texttt{orders\_by\_state\_month} : snapshots et fichiers avant et après.}
+
+\subsubsection{Exercice 5}
+
+Non réalisé : il demande une session Spark connectée à Polaris, absente de mon environnement.
+
+\shot{l3_storage}{0.9}{Fichiers de données du schéma \texttt{gold} dans le bucket.}
+
+%=====================================================================
+\section{Bilan}
+
+\begin{itemize}
+	\item Lab 2 et lab 3 exécutés de bout en bout, sauf la comparaison Spark (lab 2) et l'exercice 5 (lab 3).
+	\item Les résultats sont réels mais obtenus sur une réplique locale (Trino 480, Polaris 1.8.0, SeaweedFS). Les écarts avec l'énoncé viennent de là : silver écrite par Trino (7 snapshots \texttt{append}) et non par Spark, et 2\,829 commandes au lieu de 5\,000.
+	\item Points techniques à retenir : jointure \texttt{REPLICATED} choisie par Trino pour une dimension de 50 lignes ; l'élagage de partitions divise par 5 les lignes lues sur l'exemple (50 contre 10) ; \texttt{DELETE} puis \texttt{INSERT} ouvre une fenêtre à table vide, contrairement à \texttt{MERGE} ; les clés \texttt{row\_number()} changent à la reconstruction.
+\end{itemize}
+
+%=====================================================================
+\newpage
+\section{Annexes}
+\subsection{A. Configuration de la réplique}
+\lstinputlisting[caption={docker-compose.yml}]{annexes/docker-compose.yml}
+\lstinputlisting[caption={Catalogue Trino \texttt{lakehouse} (lakehouse.properties)}]{annexes/lakehouse.properties}
+\subsection{B. Initialisation du catalogue et de la couche silver}
+\lstinputlisting[caption={bootstrap.sh : bucket, catalogue Polaris, rôle, démarrage de Trino}]{annexes/bootstrap.sh}
+\lstinputlisting[caption={build\_silver.py : transformations silver et écriture Iceberg}]{annexes/build_silver.py}
+
+\end{document}
