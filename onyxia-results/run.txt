@@ -68,3 +68,13 @@ Release "polaris" does not exist. Installing it now.
 Error: context deadline exceeded
 Error from server (NotFound): jobs.batch "polaris-bootstrap" not found
 !!! 03 deploiement polaris a echoue
+[push] ok
+=== [12:07:59] en attente de consignes (https://raw.githubusercontent.com/ruben-ctm/ece-bigdata-2026-fall/claude/epic-wright-po7bx7/onyxia/control.txt)
+=== [12:10:00] 00 sources
+=== [12:10:00] 00 sources
+fatal: Unable to read current working directory: No such file or directory
+fatal: Unable to read current working directory: No such file or directory
+fatal: remote helper 'https' aborted session
+fatal: remote helper 'https' aborted session
+!!! 00 sources a echoue
+!!! 00 sources a echoue
